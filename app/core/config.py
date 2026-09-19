@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # External AI & Vision Service (Gemini API)
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
 
     # File Ingestion & Storage Limits
     MAX_UPLOAD_SIZE_MB: int = 25
