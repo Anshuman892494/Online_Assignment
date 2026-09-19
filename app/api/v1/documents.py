@@ -72,6 +72,11 @@ async def upload_document(
     await db.commit()
     await db.refresh(document)
 
+    # 4. Enqueue Asynchronous Processing Task (Redis or async background loop)
+    from app.services.task_queue import task_queue
+    from app.services.worker import process_document_task
+    await task_queue.enqueue_document_job(document.id, process_document_task)
+
     return DocumentUploadResponse(
         id=document.id,
         filename=document.original_filename,
