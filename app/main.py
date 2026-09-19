@@ -8,6 +8,7 @@ from app.core.database import init_db
 from app.api.v1.auth import router as auth_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.review import router as review_router
+from app.api.v1.questions import router as questions_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,6 +46,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(documents_router, prefix="/api/v1")
 app.include_router(review_router, prefix="/api/v1")
+app.include_router(questions_router, prefix="/api/v1")
 
 @app.get("/health", tags=["System"])
 @app.get("/api/v1/health", tags=["System"])
