@@ -1,0 +1,357 @@
+{
+  "info": {
+    "_postman_id": "8f3b2a19-e938-4e11-bf39-16a8d712f56b",
+    "name": "Pragati Bharati - Document Intelligence API",
+    "description": "Comprehensive Postman Collection demonstrating the Document Intelligence & Question Extraction Service API workflows (Round 2 Engineering Assignment).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doc_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "answer_key_doc_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"evaluator@pragatibharati.org\",\n  \"password\": \"EvaluatorSecure2026!\",\n  \"full_name\": \"Lead Evaluator\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (JSON)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.access_token);",
+                  "    console.log('JWT Token stored successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"evaluator@pragatibharati.org\",\n  \"password\": \"EvaluatorSecure2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login/json",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login", "json"]
+            }
+          }
+        },
+        {
+          "name": "Get Authenticated Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Document Ingestion & Status",
+      "item": [
+        {
+          "name": "Upload Question Paper PDF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('doc_id', jsonData.id);",
+                  "    console.log('Document ID stored:', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample_data/sample_digital_exam.pdf"
+                },
+                {
+                  "key": "role",
+                  "value": "QUESTION_PAPER",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Upload Answer Key PDF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('answer_key_doc_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample_data/sample_separate_answer_key.pdf"
+                },
+                {
+                  "key": "role",
+                  "value": "ANSWER_KEY",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Track Processing Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "List User Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Question Extraction & Review Queue",
+      "item": [
+        {
+          "name": "Retrieve Extracted Questions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Retrieve Review Queue Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/review-items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "review-items"]
+            }
+          }
+        },
+        {
+          "name": "Retrieve Detected Answer Key",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/answer-key",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "answer-key"]
+            }
+          }
+        },
+        {
+          "name": "Associate Separate Answer Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer_key_document_id\": \"{{answer_key_doc_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/associate-answer-key",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "associate-answer-key"]
+            }
+          }
+        },
+        {
+          "name": "Export Standardized JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{doc_id}}/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "export"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. System Probes",
+      "item": [
+        {
+          "name": "Health Check Probe",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

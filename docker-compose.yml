@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: doc_intelligence_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/doc_intelligence
+      - DATABASE_URL_SYNC=postgresql+psycopg://postgres:postgres@postgres:5432/doc_intelligence
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - SECRET_KEY=pragati_bharati_super_secure_document_intelligence_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./storage:/app/storage
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: doc_intelligence_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=doc_intelligence
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: doc_intelligence_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -1,0 +1,165 @@
+{
+  "service": "Document Intelligence & Question Extraction Service",
+  "document_type": "Digital Multi-Page Examination Paper",
+  "total_questions": 5,
+  "questions": [
+    {
+      "id": "sample-q-1",
+      "question_number": "1",
+      "question": "What is the time complexity of searching an element in a balanced binary search tree?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "label": "A",
+          "text": "O(1)"
+        },
+        {
+          "label": "B",
+          "text": "O(n)"
+        },
+        {
+          "label": "C",
+          "text": "O(log n)"
+        },
+        {
+          "label": "D",
+          "text": "O(n log n)"
+        }
+      ],
+      "answer": "C",
+      "source_pages": [
+        1
+      ],
+      "confidence": 0.98,
+      "review_required": false,
+      "review_reasons": []
+    },
+    {
+      "id": "sample-q-2",
+      "question_number": "2",
+      "question": "Which protocol is primarily responsible for reliable connection-oriented transfer on the internet?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "label": "A",
+          "text": "UDP"
+        },
+        {
+          "label": "B",
+          "text": "TCP"
+        },
+        {
+          "label": "C",
+          "text": "IP"
+        },
+        {
+          "label": "D",
+          "text": "ICMP"
+        }
+      ],
+      "answer": "B",
+      "source_pages": [
+        1
+      ],
+      "confidence": 0.98,
+      "review_required": false,
+      "review_reasons": []
+    },
+    {
+      "id": "sample-q-3",
+      "question_number": "3",
+      "question": "Consider a graph G = (V, E). A spanning tree of G is a subgraph that includes all vertices. Which greedy algorithm finds the Minimum Spanning Tree of a connected, undirected graph?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "label": "A",
+          "text": "Dijkstra's Algorithm"
+        },
+        {
+          "label": "B",
+          "text": "Kruskal's Algorithm"
+        },
+        {
+          "label": "C",
+          "text": "Floyd-Warshall Algorithm"
+        },
+        {
+          "label": "D",
+          "text": "Bellman-Ford Algorithm"
+        }
+      ],
+      "answer": "B",
+      "source_pages": [
+        1,
+        2
+      ],
+      "confidence": 0.94,
+      "review_required": true,
+      "review_reasons": [
+        "CROSS_PAGE_CONTINUATION"
+      ]
+    },
+    {
+      "id": "sample-q-4",
+      "question_number": "4",
+      "question": "In SQL, which clause is used to filter records after aggregation with GROUP BY?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "label": "A",
+          "text": "WHERE"
+        },
+        {
+          "label": "B",
+          "text": "HAVING"
+        },
+        {
+          "label": "C",
+          "text": "FILTER"
+        },
+        {
+          "label": "D",
+          "text": "ORDER BY"
+        }
+      ],
+      "answer": "B",
+      "source_pages": [
+        2
+      ],
+      "confidence": 0.98,
+      "review_required": false,
+      "review_reasons": []
+    },
+    {
+      "id": "sample-q-5",
+      "question_number": "5",
+      "question": "Which of the following is an example of an NP-Complete problem?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "label": "A",
+          "text": "Shortest Path in DAG"
+        },
+        {
+          "label": "B",
+          "text": "Traveling Salesperson Problem"
+        },
+        {
+          "label": "C",
+          "text": "Minimum Spanning Tree"
+        },
+        {
+          "label": "D",
+          "text": "Merge Sort"
+        }
+      ],
+      "answer": "B",
+      "source_pages": [
+        2
+      ],
+      "confidence": 0.98,
+      "review_required": false,
+      "review_reasons": []
+    }
+  ]
+}
