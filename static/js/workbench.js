@@ -240,61 +240,114 @@ function initDragAndDrop() {
 }
 
 function handleFileSelected(input) {
-    if (input.files && input.files[0]) {
+    const textEl = document.getElementById('drop-zone-text');
+    if (!textEl) return;
+    if (!input.files || input.files.length === 0) {
+        textEl.innerHTML = `
+            <strong style="color: var(--wb-primary);">Click or Drag & Drop Documents</strong><br>
+            Single or Multiple PDFs, Scanned pages, PNG, JPG (Max 25MB each)
+        `;
+        return;
+    }
+
+    if (input.files.length === 1) {
         const file = input.files[0];
-        document.getElementById('drop-zone-text').innerHTML = `
-            <strong>Selected:</strong><br>${file.name} (${(file.size / 1024).toFixed(1)} KB)
+        textEl.innerHTML = `
+            <strong style="color: #16a34a;">✓ 1 File Selected:</strong><br>
+            <span style="font-weight: 600; color: var(--wb-text-primary);">${escapeHtml(file.name)}</span> (${(file.size / 1024).toFixed(1)} KB)
+        `;
+    } else {
+        const totalSize = Array.from(input.files).reduce((acc, f) => acc + f.size, 0);
+        const fileNames = Array.from(input.files).map(f => escapeHtml(f.name)).slice(0, 3).join(', ');
+        const more = input.files.length > 3 ? ` +${input.files.length - 3} more` : '';
+        textEl.innerHTML = `
+            <strong style="color: #16a34a;">✓ ${input.files.length} Files Selected:</strong><br>
+            <span style="font-size: 11px; color: var(--wb-text-primary);">${fileNames}${more}</span><br>
+            <span style="font-size: 11px; color: var(--wb-text-muted);">Total: ${(totalSize / 1024 / 1024).toFixed(2)} MB</span>
         `;
     }
 }
 
-// --- File Upload ---
+// --- File Upload (Single & Batch Multiple) ---
 async function uploadSelectedFile() {
     const fileInput = document.getElementById('file-upload-input');
     if (!fileInput.files || fileInput.files.length === 0) {
-        alert("Please select a file first.");
+        alert("Please select one or more files first.");
         return;
     }
 
-    const file = fileInput.files[0];
-    const role = document.getElementById('doc-role-select').value;
+    const files = Array.from(fileInput.files);
+    const defaultRole = document.getElementById('doc-role-select').value;
+    const uploadBtn = document.querySelector('.sys-groupbox .sys-button.primary');
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.innerText = `Ingesting ${files.length} document${files.length > 1 ? 's' : ''}...`;
+    }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('role', role);
+    let successCount = 0;
+    let lastUploadedDocId = null;
+    let lastUploadedFilename = null;
 
-    document.getElementById('status-doc-name').innerText = file.name;
-    setStatusBadge('QUEUED', '#000080');
-    updateProgressBar(10);
-
-    try {
-        const res = await fetch('/api/v1/documents/upload', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: formData
-        });
-
-        if (!res.ok) {
-            const err = await res.json();
-            alert(`Upload Failed: ${err.detail || 'Unknown error'}`);
-            setStatusBadge('FAILED', '#800000');
-            updateProgressBar(0);
-            return;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Smart role detection if filename suggests answer key
+        let role = defaultRole;
+        if (files.length > 1 && defaultRole === 'QUESTION_PAPER') {
+            const fnameLower = file.name.toLowerCase();
+            if (fnameLower.includes('answer') || fnameLower.includes('key') || fnameLower.includes('solution')) {
+                role = 'ANSWER_KEY';
+            }
         }
 
-        const data = await res.json();
-        activeDocumentId = data.id;
-        document.getElementById('status-doc-name').innerText = data.filename;
-        
-        // Start polling status
-        startStatusPolling(data.id);
-        await loadDocumentsList();
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('role', role);
 
-    } catch (e) {
-        alert("Network error while uploading: " + e.message);
-        setStatusBadge('ERROR', '#800000');
+        document.getElementById('status-doc-name').innerText = `[${i + 1}/${files.length}] ${file.name}`;
+        setStatusBadge('QUEUED', '#000080');
+        updateProgressBar(Math.round(((i) / files.length) * 100));
+
+        try {
+            const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || authToken;
+            const res = await fetch('/api/v1/documents/upload', {
+                method: 'POST',
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                successCount++;
+                lastUploadedDocId = data.id;
+                lastUploadedFilename = data.filename;
+            } else {
+                const err = await res.json().catch(() => ({}));
+                console.error(`Failed to upload ${file.name}:`, err);
+            }
+        } catch (e) {
+            console.error(`Upload error for ${file.name}:`, e);
+        }
+    }
+
+    if (uploadBtn) {
+        uploadBtn.disabled = false;
+        uploadBtn.innerText = "Submit to Ingestion Queue";
+    }
+
+    if (successCount > 0) {
+        await loadDocumentsList();
+        if (lastUploadedDocId) {
+            activeDocumentId = lastUploadedDocId;
+            document.getElementById('status-doc-name').innerText = lastUploadedFilename || 'Uploaded';
+            startStatusPolling(lastUploadedDocId);
+        }
+        // Reset file input and dropzone text
+        fileInput.value = '';
+        handleFileSelected(fileInput);
+    } else {
+        alert("Failed to upload selected file(s). Please verify file size and format.");
+        setStatusBadge('FAILED', '#800000');
+        updateProgressBar(0);
     }
 }
 
