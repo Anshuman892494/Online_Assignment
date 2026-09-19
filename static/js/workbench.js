@@ -633,13 +633,25 @@ async function exportStructuredJson() {
         return;
     }
     try {
+        const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || authToken;
         const res = await fetch(`/api/v1/documents/${activeDocumentId}/export`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (res.ok) {
             const data = await res.json();
-            document.getElementById('export-json-content').value = JSON.stringify(data, null, 2);
-            document.getElementById('export-modal').classList.add('open');
+            const textarea = document.getElementById('export-json-content');
+            if (textarea) textarea.value = JSON.stringify(data, null, 2);
+
+            const statsEl = document.getElementById('export-stats-text');
+            if (statsEl) {
+                statsEl.innerText = `File: ${data.filename} • ${data.total_questions} Questions • ${data.review_required_count} Flagged for Review`;
+            }
+
+            const modal = document.getElementById('export-modal');
+            if (modal) modal.classList.add('open');
+        } else {
+            const err = await res.json().catch(() => ({}));
+            alert("Export error: " + (err.detail || res.statusText));
         }
     } catch (err) {
         alert("Export error: " + err.message);
@@ -647,22 +659,39 @@ async function exportStructuredJson() {
 }
 
 function closeExportModal() {
-    document.getElementById('export-modal').classList.remove('open');
+    const modal = document.getElementById('export-modal');
+    if (modal) modal.classList.remove('open');
 }
 
 function copyJsonToClipboard() {
-    const text = document.getElementById('export-json-content').value;
-    navigator.clipboard.writeText(text);
-    alert("Structured JSON copied to clipboard!");
+    const textarea = document.getElementById('export-json-content');
+    if (!textarea) return;
+    const text = textarea.value;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btn-copy-json');
+        if (btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Copied to Clipboard!</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 2000);
+        }
+    }).catch(() => {
+        textarea.select();
+        document.execCommand('copy');
+        alert("Structured JSON copied to clipboard!");
+    });
 }
 
 function downloadJsonFile() {
-    const text = document.getElementById('export-json-content').value;
+    const textarea = document.getElementById('export-json-content');
+    if (!textarea) return;
+    const text = textarea.value;
     const blob = new Blob([text], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `extracted_${activeDocumentId || 'questions'}.json`;
+    a.download = `standardized_export_${activeDocumentId || 'questions'}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
