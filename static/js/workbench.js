@@ -167,24 +167,32 @@ function startStatusPolling(docId) {
     }, 1000);
 }
 
-// --- Segmented Progress Bar ---
+// --- Modern Progress Bar & Badges ---
 function updateProgressBar(percentage) {
     const track = document.getElementById('progress-block-track');
-    track.innerHTML = '';
-    const numBlocks = Math.floor(percentage / 5);
-    for (let i = 0; i < numBlocks; i++) {
-        const chunk = document.createElement('div');
-        chunk.className = 'sys-block-chunk';
-        track.appendChild(chunk);
+    if (track) {
+        track.style.width = `${percentage}%`;
     }
-    track.style.width = `${percentage}%`;
-    document.getElementById('progress-text').innerText = `${percentage}% Complete`;
+    const textEl = document.getElementById('progress-text');
+    if (textEl) {
+        textEl.innerText = `${percentage}% Complete`;
+    }
 }
 
-function setStatusBadge(text, color) {
+function setStatusBadge(text) {
     const badge = document.getElementById('status-badge');
+    if (!badge) return;
     badge.innerText = text;
-    badge.style.backgroundColor = color;
+    if (text === 'COMPLETED') {
+        badge.className = 'sys-flag-confident';
+        badge.style = '';
+    } else if (text === 'FAILED' || text === 'ERROR') {
+        badge.className = 'sys-flag-review';
+        badge.style = '';
+    } else {
+        badge.className = '';
+        badge.style = 'background:#e2e8f0; color:#334155; border:1px solid #cbd5e1; border-radius:4px; font-size:11px; font-weight:600; padding:2px 8px;';
+    }
 }
 
 // --- Document Archive List ---

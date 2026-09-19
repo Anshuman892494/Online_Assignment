@@ -127,18 +127,21 @@
 
 ---
 
-### 🔹 Phase 7: Old-Fashioned Retro System Web Dashboard (Strict Design Theme)
-- **Objective:** Deliver an unforgettable, high-functioning web UI strictly adhering to `DESIGN_THEME.md`.
+### 🔹 Phase 7: Minimalist Modern Engineering Workbench (Human-Engineered Standard)
+- **Objective:** Deliver a clean, professional, high-density developer and review workbench strictly adhering to `DESIGN_THEME.md`.
 - **Tasks:**
-  1. Implement classic retro workstation layout (Windows 95 / Classic System GUI aesthetic):
-     - 3D beveled windows, navy blue titlebars, system buttons, segmented progress bar.
-     - Monospace code panels, classic tabular grids, high-contrast review badges.
+  1. Implement modern engineering workstation layout (clean developer tool aesthetic):
+     - Crisp 1px solid borders (`#e2e8f0`), subtle 4px–6px border radii, slate neutral canvas (`#f8fafc`).
+     - Anti-AI-generated design: avoids neon glows, floating gradients, or heavy frosted glass.
+     - Modern system UI font stack for controls + high-contrast monospace for code, questions, options, and JSON.
   2. Interactive features:
-     - File drag-and-drop with Document Role selector (`Question Paper`, `Answer Key`, `Combined`).
-     - Real-time asynchronous progress tracker.
-     - Split-screen viewer: Document page preview on the left, Question cards on the right.
+     - File drag-and-drop with Document Role selector (`QUESTION_PAPER`, `ANSWER_KEY`, `COMBINED`).
+     - Real-time asynchronous progress tracker with smooth CSS progress bar and stage updates.
+     - Split-screen viewer: Ingestion drawer and document archive on the left, Question cards and options on the right.
      - Filter tabs: `All Questions`, `Needs Review [!]`, `High Confidence`.
-     - 1-Click System-Independent JSON Export.
+     - In-place question approval button (`PATCH /api/v1/questions/{id}`).
+     - Separate answer key linker modal (`POST /api/v1/documents/{id}/relationships`).
+     - 1-Click System-Independent Section 7 JSON Export with code inspector, clipboard copy, and file download.
   3. Commit and push Phase 7 to GitHub remote.
 
 ---

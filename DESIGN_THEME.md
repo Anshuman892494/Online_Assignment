@@ -1,186 +1,125 @@
 # DESIGN & THEME SPECIFICATION
-## Classic Retro System (Old-Fashioned Default Engineering UI)
+## Minimalist Modern Engineering Workbench (Human-Engineered Standard)
 
-> **MANDATORY DESIGN GOAL & ENFORCEMENT:**  
-> All visual components, pages, dashboard widgets, and user-facing elements in this project MUST strictly implement this **Old-Fashioned / Classic Retro System UI** design language. Modern minimal/flat/borderless styles are explicitly prohibited.
+> **DESIGN PHILOSOPHY & OBJECTIVE:**  
+> The design language embodies a clean, high-density, professional developer and data-engineering workbench (inspired by GitHub, Linear, and modern telemetry consoles). It intentionally avoids flashy "AI-generated" design tropes (such as exaggerated neon glows, hyper-saturated purple/pink gradients, or heavy frosted glass blur). Instead, it prioritizes clarity, disciplined typography, simple 1px borders, subtle 4px/6px radii, and instant visual hierarchy.
 
 ---
 
-## 🏛️ 1. Aesthetic Philosophy & Visual Identity
+## 🏛️ 1. Core Aesthetic Principles (Human-Crafted vs. AI-Generated)
 
-The design language embodies the **Classic 1990s Operating System & Engineering Workstation UI** (Windows 95/98 / Classic Motif / NeXTSTEP / Vintage Scientific Console):
-- **Tactile 3D Bevels**: Every window, button, and card has defined light and dark borders to create physical depth (Outset for elevated surfaces, Inset for input areas and viewports).
-- **Classic System Palette**: Iconic desktop silver `#C0C0C0`, navy blue active titlebars `#000080`, high-contrast black text `#000000`, and crisp system highlight borders.
-- **Default System Typography**: Pixel-crisp system sans-serif (`MS Sans Serif`, `Tahoma`, `Geneva`) for menus and labels, and authentic fixed-width monospace (`Courier New`, `Lucida Console`) for structured questions, options, logs, and JSON.
-- **Segmented Block Progress Bars**: Classic blue marching block segments instead of modern gradient spinners.
-- **High-Density Information Architecture**: Efficient, structured, tabular layouts maximizing screen real estate without wasted empty whitespace.
+| Aspect | ❌ Generic "AI-Generated" Tropes | ✅ Pragati Bharati Engineering Workbench |
+| :--- | :--- | :--- |
+| **Borders & Outlines** | Fuzzy glowing borders, floating neon outlines | **Crisp, solid 1px borders** (`#e2e8f0` / `#cbd5e1`) |
+| **Corners & Geometry** | Oversized pills (`border-radius: 9999px`) or novelty shapes | **Subtle, uniform 4px–6px radii** |
+| **Color Schemes** | Hyper-saturated purple/magenta gradients, dark cyan glow | **Slate neutral palette** (`#f8fafc` canvas, `#0f172a` primary text, `#2563eb` action blue) |
+| **Elevation & Depth** | Heavy multidirectional drop shadows (`blur: 30px`) | **Minimal 1px–2px subtle border shadows** (`rgba(0,0,0,0.05)`) |
+| **Typography** | Generic browser serif or playful rounded fonts | **Modern system UI font** for controls + **Crisp Monospace** for code, questions, options, and JSON |
+| **Component Density**| Giant, spaced-out elements wasting screen space | **High-information density** optimized for reviewers and evaluators |
 
 ---
 
 ## 🎨 2. Official Color Palette & Design Tokens
 
-| Token Name | Hex Code | Usage |
-| :--- | :--- | :--- |
-| `--sys-desktop` | `#008080` | Classic Vintage Teal Desktop Wallpaper |
-| `--sys-gray-base` | `#C0C0C0` | Default Component / Window / Dialog Background |
-| `--sys-gray-light` | `#DFDFDF` | Panel highlight and light surface |
-| `--sys-gray-dark` | `#808080` | Inner shadow for 3D bevels and border dividers |
-| `--sys-black` | `#000000` | Deepest border shadow, primary text, input borders |
-| `--sys-white` | `#FFFFFF` | Light source reflection for top/left 3D bevel borders, input backgrounds |
-| `--sys-titlebar-active` | `#000080` | Active Window Titlebar (Classic Navy) |
-| `--sys-titlebar-text` | `#FFFFFF` | Active Titlebar Text (Bold White) |
-| `--sys-titlebar-inactive` | `#808080` | Inactive Window Titlebar (Muted Gray) |
-| `--sys-highlight` | `#000080` | Selected list items / focused options (Navy) |
-| `--sys-highlight-text` | `#FFFFFF` | Text on selected items |
-| `--sys-badge-review` | `#800000` | "NEEDS REVIEW" high-contrast warning badge (Maroon) |
-| `--sys-badge-success` | `#008000` | "CONFIDENT" high-confidence badge (Dark Green) |
-| `--sys-badge-queued` | `#000080` | "QUEUED / PROCESSING" status badge (Navy) |
-
----
-
-## 📐 3. The Classic 3D Bevel System (CSS Specifications)
-
-### A. Outset Surface (Windows, Modals, Unpressed Buttons, Cards)
-Elevates the element above the background:
 ```css
-.sys-bevel-outset {
-    background-color: #c0c0c0;
-    border-top: 2px solid #ffffff;
-    border-left: 2px solid #ffffff;
-    border-right: 2px solid #000000;
-    border-bottom: 2px solid #000000;
-    box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf;
-}
-```
+:root {
+    /* Canvas & Surfaces */
+    --wb-canvas: #f8fafc;           /* Light slate application background */
+    --wb-surface: #ffffff;          /* Pure white card and container surface */
+    --wb-surface-hover: #f1f5f9;    /* Subtle hover highlight */
+    
+    /* Borders & Dividers */
+    --wb-border: #e2e8f0;           /* Standard clean 1px border */
+    --wb-border-dark: #cbd5e1;      /* Focused input and divider boundary */
+    
+    /* Typography */
+    --wb-text-primary: #0f172a;     /* Slate 900 — Maximum readability for text & questions */
+    --wb-text-secondary: #475569;   /* Slate 600 — Metadata, options, and descriptions */
+    --wb-text-muted: #64748b;       /* Slate 500 — Timestamps, badges, and captions */
+    
+    /* Primary Brand & Actions */
+    --wb-primary: #2563eb;          /* Focused interactive blue (Blue 600) */
+    --wb-primary-hover: #1d4ed8;    /* Interactive hover blue (Blue 700) */
+    
+    /* Semantic Status Indicators */
+    --wb-badge-review-bg: #fef2f2;  /* Light crimson for "Review Required" */
+    --wb-badge-review-text: #dc2626;/* Crimson text */
+    --wb-badge-review-border: #fecaca;/* Crimson border */
+    
+    --wb-badge-ok-bg: #f0fdf4;      /* Light emerald for "Confident" */
+    --wb-badge-ok-text: #16a34a;    /* Emerald text */
+    --wb-badge-ok-border: #bbf7d0;  /* Emerald border */
 
-### B. Inset Surface (Text Inputs, Textareas, Viewports, Content Panes, Code Boxes)
-Recesses the element into the background:
-```css
-.sys-bevel-inset {
-    background-color: #ffffff;
-    border-top: 2px solid #808080;
-    border-left: 2px solid #808080;
-    border-right: 2px solid #ffffff;
-    border-bottom: 2px solid #ffffff;
-    box-shadow: inset 1px 1px #000000, inset -1px -1px #dfdfdf;
-}
-```
-
-### C. Pressed / Active Button State
-Physically depresses the button with a 1px downward shift:
-```css
-.sys-button:active {
-    border-top: 2px solid #000000;
-    border-left: 2px solid #000000;
-    border-right: 2px solid #ffffff;
-    border-bottom: 2px solid #ffffff;
-    box-shadow: inset 1px 1px #808080;
-    padding-top: 5px;
-    padding-left: 7px;
-    padding-bottom: 3px;
-    padding-right: 5px;
+    /* Typography Stacks */
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
 ```
 
 ---
 
-## 🔤 4. Typography & Font Rules
+## 📐 3. Component Architecture & UI Elements
 
-```css
-/* UI Labels, Menus, Dialogs, Window Headers */
-font-family: "MS Sans Serif", Tahoma, Geneva, "Segoe UI", sans-serif;
-font-size: 11px;
-line-height: 1.3;
--webkit-font-smoothing: antialiased;
+### A. Application Top Bar & Navigation
+- **Height**: 52px fixed header.
+- **Styling**: Pure white surface, crisp 1px solid bottom border (`border-bottom: 1px solid var(--wb-border)`).
+- **Elements**:
+  - Service branding: `Pragati Bharati` with green operational status dot.
+  - Interactive Action Toolbar: "Upload Document", "Link Answer Key", "Export Standard JSON", and "Refresh Archive".
+  - Quick Links: Direct navigation to interactive Swagger API docs (`/docs`) and ReDoc (`/redoc`).
 
-/* Structured Data, Questions, OCR Raw Text, JSON, Code Viewers */
-font-family: "Courier New", Courier, "Lucida Console", monospace;
-font-size: 13px;
-line-height: 1.4;
-```
+### B. Ingestion & Documents Drawer (Left Panel — 360px)
+- **Drag-and-Drop Ingestion Zone**:
+  - 1px dashed border (`#cbd5e1`), subtle hover background transition (`#f8fafc`).
+  - Strict client-side and server-side MIME type + magic bytes validation (`%PDF-`, `\x89PNG`, `\xff\xd8\xff`).
+  - Document Role dropdown selector (`QUESTION_PAPER`, `ANSWER_KEY`, `COMBINED`).
+- **Live Asynchronous Progress Tracker**:
+  - Sleek 6px linear progress bar (`background: #2563eb; border-radius: 3px;`).
+  - Dynamic stage label updating in real-time (`QUEUED` ➔ `PREPROCESSING` ➔ `DUAL_ENGINE_EXTRACTION` ➔ `LINKING` ➔ `READY`).
+- **Document History Archive**:
+  - Scrollable high-density card list with active item indicator (`border-left: 3px solid var(--wb-primary)`).
+  - Clear metadata: Document Role chip, page count, question count, and creation timestamp.
 
----
+### C. Review Docket & Workspace (Right Panel — Flex 1)
+- **Status Filter Tabs**:
+  - Minimal underline/flat tabs: `All Questions`, `Needs Review [!]`, and `High Confidence`.
+  - Displays instant live counter chips for each state.
+- **Question Cards**:
+  - Crisp white surface, 1px solid border (`#e2e8f0`), 6px border radius.
+  - Header: Question Number badge (`Q1`, `Q2`), Type chip (`MCQ`, `DESCRIPTIVE`), Page Index tag (`Page 1-2` for cross-page stitched questions), and Confidence score chip (`95% Confident` vs `62% Review Required`).
+  - Question Prompt: Clear monospace block with high contrast.
+  - Options Grid: Clean bordered rows; the correct answer key is prominently highlighted with a light green background (`#f0fdf4`) and green checkmark.
+  - Review Actions: In-place "Approve Question" button enabling instant resolution of low-confidence questions.
 
-## 🎛️ 5. Component Style Guide (Strict Templates)
+### D. Answer Key Linker Modal
+- Clean, centered dialog with a dark semi-transparent backdrop (`rgba(15, 23, 42, 0.5)`).
+- Dropdown selector to choose the Question Paper and corresponding Answer Key document.
+- One-click relationship binding via `POST /api/v1/documents/{id}/relationships`.
 
-### 1. Window Frame (`.sys-window`)
-- Classic window container with navy header and control icons.
-```html
-<div class="sys-window sys-bevel-outset">
-    <div class="sys-titlebar">
-        <div class="sys-titlebar-text">
-            <span class="sys-icon">&#128196;</span> Document Intelligence Workbench v1.0
-        </div>
-        <div class="sys-titlebar-controls">
-            <button class="sys-control-btn">&#9660;</button>
-            <button class="sys-control-btn">&#9650;</button>
-            <button class="sys-control-btn sys-close-btn">&#10006;</button>
-        </div>
-    </div>
-    <div class="sys-menubar">
-        <span><u>F</u>ile</span>
-        <span><u>E</u>dit</span>
-        <span><u>V</u>iew</span>
-        <span><u>T</u>ools</span>
-        <span><u>H</u>elp</span>
-    </div>
-    <div class="sys-window-body">
-        <!-- Window content here -->
-    </div>
-    <div class="sys-statusbar sys-bevel-inset">
-        <span>Ready</span>
-        <span>Connected to PostgreSQL</span>
-        <span>Queue: Idle</span>
-    </div>
-</div>
-```
-
-### 2. Segmented Progress Bar (`.sys-progress-bar`)
-- Features authentic retro block chunks:
-```html
-<div class="sys-progress-container sys-bevel-inset">
-    <div class="sys-progress-blocks">
-        <div class="sys-progress-block"></div>
-        <div class="sys-progress-block"></div>
-        <div class="sys-progress-block"></div>
-        <!-- Repeating chunks filling up according to progress -->
-    </div>
-</div>
-```
-
-### 3. Question Docket Card (`.sys-question-card`)
-- Clean index-card styling with high-contrast review tags:
-```html
-<div class="sys-question-card sys-bevel-outset">
-    <div class="sys-card-header">
-        <span class="sys-q-badge">QUESTION 04</span>
-        <span class="sys-page-ref">[Page 1 &rarr; 2]</span>
-        <span class="sys-badge-flag-review">&#9888; REVIEW REQUIRED: MISSING_OPTION_D</span>
-    </div>
-    <div class="sys-card-body sys-bevel-inset">
-        <p class="sys-q-text">Which of the following sorting algorithms has worst-case time complexity O(n log n)?</p>
-        <div class="sys-options-list">
-            <div class="sys-opt-item"><strong>[A]</strong> Quick Sort</div>
-            <div class="sys-opt-item sys-opt-correct"><strong>[B]</strong> Merge Sort <em>(Identified Key: B)</em></div>
-            <div class="sys-opt-item"><strong>[C]</strong> Bubble Sort</div>
-        </div>
-    </div>
-    <div class="sys-card-footer">
-        <span>Confidence: <strong>0.72</strong></span>
-        <button class="sys-button">Inspect Raw OCR</button>
-        <button class="sys-button">Approve Item</button>
-    </div>
-</div>
-```
-
-### 4. Tab Navigation (`.sys-tabs`)
-- Windows 95 tabbed folder aesthetic with overlapping active tab.
+### E. Standard Section 7 JSON Export Modal
+- Full JSON schema inspector with dark theme container (`#0f172a` slate background, `#38bdf8` light blue syntax).
+- Includes one-click **"Copy to Clipboard"** button and **"Download .json"** button.
 
 ---
 
-## 🔒 6. Strict Enforcement Rules for All Developers & Agents
-1. **No Flat Buttons**: Every button must have a 3D bevel and active depression state.
-2. **No Border-Radius Pill Shapes**: All containers, inputs, buttons, and badges must have crisp 0px or 1px corners.
-3. **No Blurred Shadows**: Box shadows must use hard color edges (1px / 2px bevels), no `blur-radius` gradients.
-4. **Authentic System Cursors**: Use `cursor: default`, `cursor: pointer`, `cursor: text` where appropriate.
-5. **No Ad-Hoc CSS**: All components must import and use the master `static/css/retro-system.css` style definitions.
+## ⚡ 4. Code & Performance Optimization
+
+1. **Lightweight Native Implementation**:
+   - Zero heavy frontend dependencies (no React runtime overhead, no bloated CSS framework).
+   - Entire interface is powered by native ES6+ JavaScript and Vanilla CSS Custom Properties.
+2. **Optimized Polling Lifecycle**:
+   - Asynchronous status polling is debounced to 1,500ms intervals during active processing.
+   - Interval is automatically cleared upon terminal states (`COMPLETED` or `FAILED`), eliminating redundant network traffic.
+3. **Memory Management**:
+   - Event listeners are cleanly scoped and reused.
+   - Clean DOM fragment updates avoid layout thrashing and unnecessary repaints.
+4. **Resilient Backend Fallbacks**:
+   - Dynamic database proxy (`DynamicAsyncSessionLocal`) handles automatic fallback between PostgreSQL and SQLite.
+   - Dual-Engine AI extraction pairs Gemini Vision 2.5-Flash with local PyMuPDF regex fallback for zero downtime.
+
+---
+
+## 🔒 5. Accessibility & Human Ergonomics
+- **Contrast Ratios**: All text elements satisfy WCAG 2.1 AA compliance (Slate 900 on Slate 50 achieves an exceptional contrast ratio of 16.8:1).
+- **Focused States**: Visible, clean 2px focus outlines (`outline: 2px solid var(--wb-primary)`) for keyboard accessibility.
+- **Semantic HTML**: Fully semantic structural elements (`<header>`, `<main>`, `<aside>`, `<section>`, `<dialog>`).

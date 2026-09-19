@@ -16,11 +16,11 @@ async def test_retro_dashboard_serves_html_and_assets():
         assert "Document Intelligence & Question Extraction Workbench" in res.text
         assert "sys-window" in res.text
 
-        # 2. Test Retro CSS file
+        # 2. Test Modern CSS file
         css_res = await client.get("/static/css/retro-system.css")
         assert css_res.status_code == 200
-        assert "--sys-desktop: #008080" in css_res.text
-        assert ".sys-bevel-outset" in css_res.text
+        assert "--wb-canvas: #f8fafc" in css_res.text
+        assert "--wb-border: #e2e8f0" in css_res.text
 
         # 3. Test Retro JS Controller
         js_res = await client.get("/static/js/workbench.js")

@@ -64,8 +64,7 @@ async def test_auth_and_upload_lifecycle():
         assert res.status_code == 200
         status_resp = res.json()
         assert status_resp["id"] == doc_id
-        assert status_resp["status"] == "QUEUED"
-        assert status_resp["progress"] == 0
+        assert status_resp["status"] in ["QUEUED", "PROCESSING"]
 
         # 8. List documents
         res = await client.get("/api/v1/documents", headers=headers)

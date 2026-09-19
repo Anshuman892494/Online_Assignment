@@ -1,24 +1,31 @@
 /* ==========================================================================
-   CLASSIC RETRO SYSTEM THEME (Old-Fashioned Default Engineering UI)
-   Strictly conforming to DESIGN_THEME.md
+   MODERN ENGINEERING WORKBENCH THEME
+   Strictly conforming to updated DESIGN_THEME.md
+   Simple, clean, minimalist human-engineered standard.
    ========================================================================== */
 
 :root {
-    --sys-desktop: #008080;
-    --sys-gray-base: #c0c0c0;
-    --sys-gray-light: #dfdfdf;
-    --sys-gray-dark: #808080;
-    --sys-black: #000000;
-    --sys-white: #ffffff;
-    --sys-titlebar-active: #000080;
-    --sys-titlebar-text: #ffffff;
-    --sys-titlebar-inactive: #808080;
-    --sys-highlight: #000080;
-    --sys-highlight-text: #ffffff;
-    --sys-badge-review: #800000;
-    --sys-badge-success: #008000;
-    --sys-font-ui: "MS Sans Serif", Tahoma, Geneva, "Segoe UI", sans-serif;
-    --sys-font-mono: "Courier New", Courier, "Lucida Console", monospace;
+    --wb-canvas: #f8fafc;
+    --wb-surface: #ffffff;
+    --wb-surface-hover: #f1f5f9;
+    --wb-border: #e2e8f0;
+    --wb-border-dark: #cbd5e1;
+    --wb-text-primary: #0f172a;
+    --wb-text-secondary: #475569;
+    --wb-text-muted: #64748b;
+    --wb-primary: #2563eb;
+    --wb-primary-hover: #1d4ed8;
+    
+    --wb-badge-review-bg: #fef2f2;
+    --wb-badge-review-text: #dc2626;
+    --wb-badge-review-border: #fecaca;
+    
+    --wb-badge-ok-bg: #f0fdf4;
+    --wb-badge-ok-text: #16a34a;
+    --wb-badge-ok-border: #bbf7d0;
+
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 * {
@@ -28,434 +35,430 @@
 }
 
 body {
-    background-color: var(--sys-desktop);
-    font-family: var(--sys-font-ui);
-    font-size: 12px;
-    color: var(--sys-black);
-    padding: 12px;
+    background-color: var(--wb-canvas);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--wb-text-primary);
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    user-select: none;
+    line-height: 1.5;
 }
 
-/* --- Classic 3D Bevel Utilities --- */
-.sys-bevel-outset {
-    background-color: var(--sys-gray-base);
-    border-top: 2px solid var(--sys-white);
-    border-left: 2px solid var(--sys-white);
-    border-right: 2px solid var(--sys-black);
-    border-bottom: 2px solid var(--sys-black);
-    box-shadow: inset -1px -1px var(--sys-gray-dark), inset 1px 1px var(--sys-gray-light);
-}
-
-.sys-bevel-inset {
-    background-color: var(--sys-white);
-    border-top: 2px solid var(--sys-gray-dark);
-    border-left: 2px solid var(--sys-gray-dark);
-    border-right: 2px solid var(--sys-white);
-    border-bottom: 2px solid var(--sys-white);
-    box-shadow: inset 1px 1px var(--sys-black), inset -1px -1px var(--sys-gray-light);
-}
-
-/* --- Window Container --- */
+/* --- App Container --- */
 .sys-window {
     display: flex;
     flex-direction: column;
     height: 100%;
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    overflow: hidden;
+    background-color: var(--wb-canvas);
 }
 
-/* --- Titlebar --- */
+/* --- Header / Titlebar --- */
 .sys-titlebar {
-    background-color: var(--sys-titlebar-active);
-    color: var(--sys-titlebar-text);
-    padding: 3px 6px;
+    background-color: var(--wb-surface);
+    border-bottom: 1px solid var(--wb-border);
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-weight: bold;
-    font-size: 12px;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wb-text-primary);
 }
 
 .sys-titlebar-controls {
     display: flex;
-    gap: 2px;
+    align-items: center;
+    gap: 8px;
 }
 
 .sys-control-btn {
-    background-color: var(--sys-gray-base);
-    border-top: 1px solid var(--sys-white);
-    border-left: 1px solid var(--sys-white);
-    border-right: 1px solid var(--sys-black);
-    border-bottom: 1px solid var(--sys-black);
-    color: var(--sys-black);
-    width: 18px;
-    height: 16px;
-    font-size: 10px;
-    font-weight: bold;
-    line-height: 14px;
-    text-align: center;
-    cursor: pointer;
-    outline: none;
-}
-
-.sys-control-btn:active {
-    border-top: 1px solid var(--sys-black);
-    border-left: 1px solid var(--sys-black);
-    border-right: 1px solid var(--sys-white);
-    border-bottom: 1px solid var(--sys-white);
-    padding-top: 1px;
-    padding-left: 1px;
-}
-
-/* --- Menubar --- */
-.sys-menubar {
-    background-color: var(--sys-gray-base);
+    background: transparent;
+    border: 1px solid var(--wb-border);
+    border-radius: 4px;
+    color: var(--wb-text-secondary);
     padding: 4px 8px;
-    display: flex;
-    gap: 16px;
-    border-bottom: 1px solid var(--sys-gray-dark);
     font-size: 11px;
-}
-
-.sys-menubar span {
     cursor: pointer;
+    transition: background 0.15s ease;
 }
 
-.sys-menubar span:hover {
-    background-color: var(--sys-highlight);
-    color: var(--sys-highlight-text);
-    padding: 0 4px;
+.sys-control-btn:hover {
+    background: var(--wb-surface-hover);
+    color: var(--wb-text-primary);
 }
 
-/* --- Toolbar --- */
+/* --- Menubar & Quick Links --- */
+.sys-menubar {
+    display: none; /* Replaced by unified clean toolbar */
+}
+
+/* --- Main Toolbar --- */
 .sys-toolbar {
-    background-color: var(--sys-gray-base);
-    padding: 6px 8px;
+    background-color: var(--wb-surface);
+    border-bottom: 1px solid var(--wb-border);
+    padding: 8px 16px;
     display: flex;
     align-items: center;
     gap: 8px;
-    border-bottom: 2px groove var(--sys-white);
+    flex-wrap: wrap;
 }
 
 .sys-button {
-    background-color: var(--sys-gray-base);
-    border-top: 2px solid var(--sys-white);
-    border-left: 2px solid var(--sys-white);
-    border-right: 2px solid var(--sys-black);
-    border-bottom: 2px solid var(--sys-black);
-    box-shadow: inset -1px -1px var(--sys-gray-dark), inset 1px 1px var(--sys-gray-light);
-    color: var(--sys-black);
-    padding: 4px 10px;
-    font-family: var(--sys-font-ui);
-    font-size: 11px;
-    font-weight: bold;
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border-dark);
+    border-radius: 4px;
+    color: var(--wb-text-secondary);
+    padding: 6px 12px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    outline: none;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    transition: all 0.15s ease;
 }
 
-.sys-button:active {
-    border-top: 2px solid var(--sys-black);
-    border-left: 2px solid var(--sys-black);
-    border-right: 2px solid var(--sys-white);
-    border-bottom: 2px solid var(--sys-white);
-    box-shadow: inset 1px 1px var(--sys-gray-dark);
-    padding-top: 5px;
-    padding-left: 11px;
-    padding-bottom: 3px;
-    padding-right: 9px;
+.sys-button:hover {
+    background-color: var(--wb-surface-hover);
+    color: var(--wb-text-primary);
+    border-color: #94a3b8;
+}
+
+.sys-button.primary {
+    background-color: var(--wb-primary);
+    border-color: var(--wb-primary);
+    color: #ffffff;
+}
+
+.sys-button.primary:hover {
+    background-color: var(--wb-primary-hover);
+    border-color: var(--wb-primary-hover);
 }
 
 .sys-button:disabled {
-    color: var(--sys-gray-dark);
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* --- Main Workspace Layout --- */
+/* --- Main Workspace (Split-Screen) --- */
 .sys-workspace {
     flex: 1;
     display: grid;
     grid-template-columns: 360px 1fr;
-    gap: 6px;
-    padding: 8px;
+    gap: 16px;
+    padding: 16px;
     overflow: hidden;
-    background-color: var(--sys-gray-base);
+    background-color: var(--wb-canvas);
 }
 
-/* --- Left Ingestion / Control Panel --- */
+/* --- Left Control Panel --- */
 .sys-panel-left {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     overflow-y: auto;
 }
 
 .sys-groupbox {
-    border: 2px groove var(--sys-white);
-    padding: 8px;
-    margin-top: 6px;
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 6px;
+    padding: 14px;
     position: relative;
-    background-color: var(--sys-gray-base);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .sys-groupbox-legend {
-    position: absolute;
-    top: -8px;
-    left: 10px;
-    background-color: var(--sys-gray-base);
-    padding: 0 4px;
-    font-weight: bold;
-    font-size: 11px;
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wb-text-primary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .sys-dropzone {
-    border: 2px dashed var(--sys-gray-dark);
-    background-color: #efefef;
+    border: 2px dashed var(--wb-border-dark);
+    border-radius: 6px;
+    background-color: #fafafa;
     padding: 16px;
     text-align: center;
     cursor: pointer;
-    margin-top: 6px;
+    transition: all 0.15s ease;
 }
 
-.sys-dropzone.dragover {
-    background-color: #d6e4ff;
-    border-color: var(--sys-titlebar-active);
+.sys-dropzone:hover, .sys-dropzone.dragover {
+    border-color: var(--wb-primary);
+    background-color: #eff6ff;
 }
 
 .sys-select, .sys-input {
     width: 100%;
-    padding: 4px;
-    font-family: var(--sys-font-ui);
-    font-size: 11px;
-    margin-top: 4px;
-    background-color: var(--sys-white);
-    border-top: 2px solid var(--sys-gray-dark);
-    border-left: 2px solid var(--sys-gray-dark);
-    border-right: 2px solid var(--sys-white);
-    border-bottom: 2px solid var(--sys-white);
+    padding: 7px 10px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--wb-text-primary);
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border-dark);
+    border-radius: 4px;
     outline: none;
+    transition: border-color 0.15s ease;
 }
 
-/* --- Segmented Block Progress Bar --- */
+.sys-select:focus, .sys-input:focus {
+    border-color: var(--wb-primary);
+}
+
+/* --- Progress Bar --- */
 .sys-progress-container {
-    height: 22px;
-    padding: 2px;
-    background-color: var(--sys-white);
-    margin-top: 6px;
-    display: flex;
+    height: 8px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    margin-top: 8px;
     overflow: hidden;
+    position: relative;
 }
 
 .sys-progress-blocks {
-    display: flex;
     height: 100%;
     width: 0%;
-    gap: 2px;
-    transition: width 0.2s ease;
+    background-color: var(--wb-primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
 }
 
 .sys-block-chunk {
-    width: 10px;
-    height: 100%;
-    background-color: var(--sys-titlebar-active);
-    flex-shrink: 0;
+    display: none; /* Replaced by smooth linear progress */
 }
 
-/* --- Document List Inset Grid --- */
+/* --- Processed Documents List --- */
 .sys-doc-list {
-    height: 160px;
+    max-height: 180px;
     overflow-y: auto;
-    font-family: var(--sys-font-mono);
-    font-size: 11px;
-    background-color: var(--sys-white);
-    padding: 2px;
+    border: 1px solid var(--wb-border);
+    border-radius: 4px;
+    background-color: var(--wb-surface);
+    margin-top: 6px;
 }
 
 .sys-doc-item {
-    padding: 3px 6px;
+    padding: 8px 12px;
     cursor: pointer;
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+    transition: background 0.15s ease;
+}
+
+.sys-doc-item:last-child {
+    border-bottom: none;
 }
 
 .sys-doc-item:hover {
-    background-color: #e0e0e0;
+    background-color: var(--wb-surface-hover);
 }
 
 .sys-doc-item.active {
-    background-color: var(--sys-highlight);
-    color: var(--sys-highlight-text);
+    background-color: #eff6ff;
+    color: var(--wb-primary);
+    font-weight: 600;
 }
 
-/* --- Right Question Viewer / Workspace --- */
+/* --- Right Panel: Questions Viewport --- */
 .sys-panel-right {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* --- Tabs --- */
 .sys-tabs {
     display: flex;
-    gap: 2px;
-    padding-left: 4px;
-    border-bottom: 2px solid var(--sys-white);
+    border-bottom: 1px solid var(--wb-border);
+    background-color: #ffffff;
+    padding: 0 12px;
 }
 
 .sys-tab {
-    background-color: var(--sys-gray-base);
-    border-top: 2px solid var(--sys-white);
-    border-left: 2px solid var(--sys-white);
-    border-right: 2px solid var(--sys-black);
-    padding: 4px 12px;
-    font-weight: bold;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--wb-text-secondary);
     cursor: pointer;
-    position: relative;
-    top: 2px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sys-tab:hover {
+    color: var(--wb-text-primary);
 }
 
 .sys-tab.active {
-    background-color: var(--sys-gray-base);
-    border-bottom: 2px solid var(--sys-gray-base);
-    top: 0px;
-    padding-top: 6px;
+    color: var(--wb-primary);
+    border-bottom-color: var(--wb-primary);
+    font-weight: 600;
 }
 
 .sys-tab-badge {
-    background-color: var(--sys-badge-review);
-    color: var(--sys-white);
-    padding: 1px 4px;
-    font-size: 9px;
-    font-family: var(--sys-font-mono);
-    margin-left: 4px;
+    background-color: #e2e8f0;
+    color: var(--wb-text-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
-/* --- Question Card Docket List --- */
+.sys-tab.active .sys-tab-badge {
+    background-color: #dbeafe;
+    color: var(--wb-primary);
+}
+
+/* --- Questions List Viewport --- */
 .sys-question-viewport {
     flex: 1;
     overflow-y: auto;
-    padding: 8px;
-    background-color: #d4d0c8;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    background-color: #fafafa;
 }
 
 .sys-question-card {
-    padding: 8px;
-    background-color: var(--sys-gray-base);
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: border-color 0.15s ease;
+}
+
+.sys-question-card:hover {
+    border-color: var(--wb-border-dark);
 }
 
 .sys-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .sys-q-num {
-    font-family: var(--sys-font-mono);
-    font-weight: bold;
+    font-family: var(--font-mono);
+    font-weight: 600;
     font-size: 13px;
-    background-color: var(--sys-titlebar-active);
-    color: var(--sys-white);
-    padding: 2px 6px;
+    color: #1e293b;
+    background-color: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--wb-border);
 }
 
 .sys-q-pages {
-    font-family: var(--sys-font-mono);
-    font-size: 11px;
-    color: #333;
-    font-weight: bold;
+    font-size: 12px;
+    color: var(--wb-text-muted);
+    margin-left: 6px;
 }
 
+/* Badges */
 .sys-flag-review {
-    background-color: var(--sys-badge-review);
-    color: var(--sys-white);
-    font-family: var(--sys-font-mono);
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border: 1px solid var(--sys-black);
+    background-color: var(--wb-badge-review-bg);
+    color: var(--wb-badge-review-text);
+    border: 1px solid var(--wb-badge-review-border);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
 }
 
 .sys-flag-confident {
-    background-color: var(--sys-badge-success);
-    color: var(--sys-white);
-    font-family: var(--sys-font-mono);
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border: 1px solid var(--sys-black);
+    background-color: var(--wb-badge-ok-bg);
+    color: var(--wb-badge-ok-text);
+    border: 1px solid var(--wb-badge-ok-border);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
 }
 
 .sys-q-body {
-    padding: 8px;
-    background-color: var(--sys-white);
-    font-family: var(--sys-font-mono);
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--sys-black);
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--wb-text-primary);
 }
 
 .sys-options-grid {
-    margin-top: 8px;
+    margin-top: 10px;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4px;
-}
-
-.sys-option-row {
-    padding: 4px 6px;
-    background-color: #f7f7f7;
-    border: 1px dotted var(--sys-gray-dark);
-    display: flex;
-    align-items: center;
     gap: 6px;
 }
 
+.sys-option-row {
+    padding: 8px 12px;
+    background-color: #ffffff;
+    border: 1px solid var(--wb-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
 .sys-option-row.correct {
-    background-color: #d5eed5;
-    border: 1px solid var(--sys-badge-success);
-    font-weight: bold;
+    background-color: var(--wb-badge-ok-bg);
+    border-color: var(--wb-badge-ok-border);
+    color: #14532d;
+    font-weight: 500;
 }
 
 .sys-card-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 6px;
-    font-size: 11px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 12px;
+    color: var(--wb-text-muted);
 }
 
 /* --- Statusbar --- */
 .sys-statusbar {
-    background-color: var(--sys-gray-base);
-    padding: 3px 6px;
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 4px;
+    background-color: var(--wb-surface);
+    border-top: 1px solid var(--wb-border);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     font-size: 11px;
-    border-top: 1px solid var(--sys-gray-dark);
+    color: var(--wb-text-muted);
 }
 
 .sys-status-cell {
-    padding: 2px 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-/* --- Modal Dialog --- */
+/* --- Modal Overlays --- */
 .sys-modal-overlay {
     display: none;
     position: fixed;
@@ -463,10 +466,11 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(15, 23, 42, 0.5);
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
 }
 
 .sys-modal-overlay.open {
@@ -474,20 +478,29 @@ body {
 }
 
 .sys-modal-content {
-    width: 700px;
+    background-color: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 6px;
+    width: 720px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .sys-code-viewer {
     flex: 1;
-    height: 350px;
-    background-color: #000000;
-    color: #00ff00;
-    font-family: var(--sys-font-mono);
+    height: 380px;
+    background-color: #0f172a;
+    color: #38bdf8;
+    font-family: var(--font-mono);
     font-size: 12px;
-    padding: 8px;
+    line-height: 1.5;
+    padding: 12px;
+    border: 1px solid #334155;
+    border-radius: 4px;
     overflow: auto;
     white-space: pre;
+    outline: none;
 }
