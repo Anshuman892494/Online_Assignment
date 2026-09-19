@@ -1,0 +1,493 @@
+/* ==========================================================================
+   CLASSIC RETRO SYSTEM THEME (Old-Fashioned Default Engineering UI)
+   Strictly conforming to DESIGN_THEME.md
+   ========================================================================== */
+
+:root {
+    --sys-desktop: #008080;
+    --sys-gray-base: #c0c0c0;
+    --sys-gray-light: #dfdfdf;
+    --sys-gray-dark: #808080;
+    --sys-black: #000000;
+    --sys-white: #ffffff;
+    --sys-titlebar-active: #000080;
+    --sys-titlebar-text: #ffffff;
+    --sys-titlebar-inactive: #808080;
+    --sys-highlight: #000080;
+    --sys-highlight-text: #ffffff;
+    --sys-badge-review: #800000;
+    --sys-badge-success: #008000;
+    --sys-font-ui: "MS Sans Serif", Tahoma, Geneva, "Segoe UI", sans-serif;
+    --sys-font-mono: "Courier New", Courier, "Lucida Console", monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--sys-desktop);
+    font-family: var(--sys-font-ui);
+    font-size: 12px;
+    color: var(--sys-black);
+    padding: 12px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* --- Classic 3D Bevel Utilities --- */
+.sys-bevel-outset {
+    background-color: var(--sys-gray-base);
+    border-top: 2px solid var(--sys-white);
+    border-left: 2px solid var(--sys-white);
+    border-right: 2px solid var(--sys-black);
+    border-bottom: 2px solid var(--sys-black);
+    box-shadow: inset -1px -1px var(--sys-gray-dark), inset 1px 1px var(--sys-gray-light);
+}
+
+.sys-bevel-inset {
+    background-color: var(--sys-white);
+    border-top: 2px solid var(--sys-gray-dark);
+    border-left: 2px solid var(--sys-gray-dark);
+    border-right: 2px solid var(--sys-white);
+    border-bottom: 2px solid var(--sys-white);
+    box-shadow: inset 1px 1px var(--sys-black), inset -1px -1px var(--sys-gray-light);
+}
+
+/* --- Window Container --- */
+.sys-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* --- Titlebar --- */
+.sys-titlebar {
+    background-color: var(--sys-titlebar-active);
+    color: var(--sys-titlebar-text);
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.sys-titlebar-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.sys-control-btn {
+    background-color: var(--sys-gray-base);
+    border-top: 1px solid var(--sys-white);
+    border-left: 1px solid var(--sys-white);
+    border-right: 1px solid var(--sys-black);
+    border-bottom: 1px solid var(--sys-black);
+    color: var(--sys-black);
+    width: 18px;
+    height: 16px;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 14px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+}
+
+.sys-control-btn:active {
+    border-top: 1px solid var(--sys-black);
+    border-left: 1px solid var(--sys-black);
+    border-right: 1px solid var(--sys-white);
+    border-bottom: 1px solid var(--sys-white);
+    padding-top: 1px;
+    padding-left: 1px;
+}
+
+/* --- Menubar --- */
+.sys-menubar {
+    background-color: var(--sys-gray-base);
+    padding: 4px 8px;
+    display: flex;
+    gap: 16px;
+    border-bottom: 1px solid var(--sys-gray-dark);
+    font-size: 11px;
+}
+
+.sys-menubar span {
+    cursor: pointer;
+}
+
+.sys-menubar span:hover {
+    background-color: var(--sys-highlight);
+    color: var(--sys-highlight-text);
+    padding: 0 4px;
+}
+
+/* --- Toolbar --- */
+.sys-toolbar {
+    background-color: var(--sys-gray-base);
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px groove var(--sys-white);
+}
+
+.sys-button {
+    background-color: var(--sys-gray-base);
+    border-top: 2px solid var(--sys-white);
+    border-left: 2px solid var(--sys-white);
+    border-right: 2px solid var(--sys-black);
+    border-bottom: 2px solid var(--sys-black);
+    box-shadow: inset -1px -1px var(--sys-gray-dark), inset 1px 1px var(--sys-gray-light);
+    color: var(--sys-black);
+    padding: 4px 10px;
+    font-family: var(--sys-font-ui);
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sys-button:active {
+    border-top: 2px solid var(--sys-black);
+    border-left: 2px solid var(--sys-black);
+    border-right: 2px solid var(--sys-white);
+    border-bottom: 2px solid var(--sys-white);
+    box-shadow: inset 1px 1px var(--sys-gray-dark);
+    padding-top: 5px;
+    padding-left: 11px;
+    padding-bottom: 3px;
+    padding-right: 9px;
+}
+
+.sys-button:disabled {
+    color: var(--sys-gray-dark);
+    cursor: not-allowed;
+}
+
+/* --- Main Workspace Layout --- */
+.sys-workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 6px;
+    padding: 8px;
+    overflow: hidden;
+    background-color: var(--sys-gray-base);
+}
+
+/* --- Left Ingestion / Control Panel --- */
+.sys-panel-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+.sys-groupbox {
+    border: 2px groove var(--sys-white);
+    padding: 8px;
+    margin-top: 6px;
+    position: relative;
+    background-color: var(--sys-gray-base);
+}
+
+.sys-groupbox-legend {
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background-color: var(--sys-gray-base);
+    padding: 0 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.sys-dropzone {
+    border: 2px dashed var(--sys-gray-dark);
+    background-color: #efefef;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 6px;
+}
+
+.sys-dropzone.dragover {
+    background-color: #d6e4ff;
+    border-color: var(--sys-titlebar-active);
+}
+
+.sys-select, .sys-input {
+    width: 100%;
+    padding: 4px;
+    font-family: var(--sys-font-ui);
+    font-size: 11px;
+    margin-top: 4px;
+    background-color: var(--sys-white);
+    border-top: 2px solid var(--sys-gray-dark);
+    border-left: 2px solid var(--sys-gray-dark);
+    border-right: 2px solid var(--sys-white);
+    border-bottom: 2px solid var(--sys-white);
+    outline: none;
+}
+
+/* --- Segmented Block Progress Bar --- */
+.sys-progress-container {
+    height: 22px;
+    padding: 2px;
+    background-color: var(--sys-white);
+    margin-top: 6px;
+    display: flex;
+    overflow: hidden;
+}
+
+.sys-progress-blocks {
+    display: flex;
+    height: 100%;
+    width: 0%;
+    gap: 2px;
+    transition: width 0.2s ease;
+}
+
+.sys-block-chunk {
+    width: 10px;
+    height: 100%;
+    background-color: var(--sys-titlebar-active);
+    flex-shrink: 0;
+}
+
+/* --- Document List Inset Grid --- */
+.sys-doc-list {
+    height: 160px;
+    overflow-y: auto;
+    font-family: var(--sys-font-mono);
+    font-size: 11px;
+    background-color: var(--sys-white);
+    padding: 2px;
+}
+
+.sys-doc-item {
+    padding: 3px 6px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sys-doc-item:hover {
+    background-color: #e0e0e0;
+}
+
+.sys-doc-item.active {
+    background-color: var(--sys-highlight);
+    color: var(--sys-highlight-text);
+}
+
+/* --- Right Question Viewer / Workspace --- */
+.sys-panel-right {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- Tabs --- */
+.sys-tabs {
+    display: flex;
+    gap: 2px;
+    padding-left: 4px;
+    border-bottom: 2px solid var(--sys-white);
+}
+
+.sys-tab {
+    background-color: var(--sys-gray-base);
+    border-top: 2px solid var(--sys-white);
+    border-left: 2px solid var(--sys-white);
+    border-right: 2px solid var(--sys-black);
+    padding: 4px 12px;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+}
+
+.sys-tab.active {
+    background-color: var(--sys-gray-base);
+    border-bottom: 2px solid var(--sys-gray-base);
+    top: 0px;
+    padding-top: 6px;
+}
+
+.sys-tab-badge {
+    background-color: var(--sys-badge-review);
+    color: var(--sys-white);
+    padding: 1px 4px;
+    font-size: 9px;
+    font-family: var(--sys-font-mono);
+    margin-left: 4px;
+}
+
+/* --- Question Card Docket List --- */
+.sys-question-viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    background-color: #d4d0c8;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sys-question-card {
+    padding: 8px;
+    background-color: var(--sys-gray-base);
+}
+
+.sys-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.sys-q-num {
+    font-family: var(--sys-font-mono);
+    font-weight: bold;
+    font-size: 13px;
+    background-color: var(--sys-titlebar-active);
+    color: var(--sys-white);
+    padding: 2px 6px;
+}
+
+.sys-q-pages {
+    font-family: var(--sys-font-mono);
+    font-size: 11px;
+    color: #333;
+    font-weight: bold;
+}
+
+.sys-flag-review {
+    background-color: var(--sys-badge-review);
+    color: var(--sys-white);
+    font-family: var(--sys-font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border: 1px solid var(--sys-black);
+}
+
+.sys-flag-confident {
+    background-color: var(--sys-badge-success);
+    color: var(--sys-white);
+    font-family: var(--sys-font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border: 1px solid var(--sys-black);
+}
+
+.sys-q-body {
+    padding: 8px;
+    background-color: var(--sys-white);
+    font-family: var(--sys-font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--sys-black);
+}
+
+.sys-options-grid {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
+.sys-option-row {
+    padding: 4px 6px;
+    background-color: #f7f7f7;
+    border: 1px dotted var(--sys-gray-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sys-option-row.correct {
+    background-color: #d5eed5;
+    border: 1px solid var(--sys-badge-success);
+    font-weight: bold;
+}
+
+.sys-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+/* --- Statusbar --- */
+.sys-statusbar {
+    background-color: var(--sys-gray-base);
+    padding: 3px 6px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4px;
+    font-size: 11px;
+    border-top: 1px solid var(--sys-gray-dark);
+}
+
+.sys-status-cell {
+    padding: 2px 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Modal Dialog --- */
+.sys-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.sys-modal-overlay.open {
+    display: flex;
+}
+
+.sys-modal-content {
+    width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.sys-code-viewer {
+    flex: 1;
+    height: 350px;
+    background-color: #000000;
+    color: #00ff00;
+    font-family: var(--sys-font-mono);
+    font-size: 12px;
+    padding: 8px;
+    overflow: auto;
+    white-space: pre;
+}

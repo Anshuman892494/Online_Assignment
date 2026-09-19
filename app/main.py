@@ -48,6 +48,21 @@ app.include_router(documents_router, prefix="/api/v1")
 app.include_router(review_router, prefix="/api/v1")
 app.include_router(questions_router, prefix="/api/v1")
 
+from fastapi.responses import FileResponse
+
+# Mount static files
+static_path = Path(__file__).resolve().parent.parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
+@app.get("/", tags=["UI Dashboard"])
+async def root_workbench():
+    """Serves the Classic Retro Workbench UI."""
+    index_file = static_path / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": f"Welcome to {settings.APP_NAME}. Explore /docs for API."}
+
 @app.get("/health", tags=["System"])
 @app.get("/api/v1/health", tags=["System"])
 async def health_check():

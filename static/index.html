@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati Bharati — Document Intelligence & Question Extraction Workbench</title>
+    <link rel="stylesheet" href="/static/css/retro-system.css">
+</head>
+<body>
+
+    <!-- Main System Window -->
+    <div class="sys-window sys-bevel-outset">
+        
+        <!-- Window Titlebar -->
+        <div class="sys-titlebar">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span>&#128196;</span>
+                <span>Document Intelligence & Question Extraction Workbench v1.0 [Pragati Bharati]</span>
+            </div>
+            <div class="sys-titlebar-controls">
+                <button class="sys-control-btn" title="Minimize">&#9660;</button>
+                <button class="sys-control-btn" title="Maximize">&#9650;</button>
+                <button class="sys-control-btn" title="Close" onclick="alert('Session Active')">&#10006;</button>
+            </div>
+        </div>
+
+        <!-- Menubar -->
+        <div class="sys-menubar">
+            <span onclick="document.getElementById('file-upload-input').click()"><u>F</u>ile</span>
+            <span onclick="exportStructuredJson()"><u>E</u>xport</span>
+            <span onclick="loadDocumentsList()"><u>V</u>iew</span>
+            <span onclick="window.open('/docs', '_blank')"><u>A</u>PI Docs (Swagger)</span>
+            <span onclick="showAboutModal()"><u>H</u>elp</span>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="sys-toolbar">
+            <button class="sys-button" onclick="document.getElementById('file-upload-input').click()">
+                <span>&#128194;</span> Open File...
+            </button>
+            <button class="sys-button" onclick="uploadSelectedFile()">
+                <span>&#9654;</span> Ingest & Process
+            </button>
+            <button class="sys-button" onclick="openAssociateModal()">
+                <span>&#128279;</span> Link Answer Key
+            </button>
+            <button class="sys-button" onclick="loadQuestionsForActiveDoc()">
+                <span>&#8635;</span> Refresh
+            </button>
+            <button class="sys-button" onclick="exportStructuredJson()">
+                <span>&#128190;</span> Export JSON
+            </button>
+            <button class="sys-button" onclick="window.open('/docs', '_blank')">
+                <span>&#128220;</span> Swagger /docs
+            </button>
+        </div>
+
+        <!-- Main Split-Screen Workspace -->
+        <div class="sys-workspace">
+            
+            <!-- Left Side: Ingestion & Control Center -->
+            <div class="sys-panel-left">
+                
+                <!-- Group 1: Document Ingestion -->
+                <div class="sys-groupbox">
+                    <span class="sys-groupbox-legend">Document Ingestion Gateway</span>
+                    <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileSelected(this)">
+                    
+                    <div class="sys-dropzone sys-bevel-inset" id="drop-zone" onclick="document.getElementById('file-upload-input').click()">
+                        <div id="drop-zone-text" style="font-size: 11px;">
+                            <strong>Click or Drag & Drop Document</strong><br>
+                            PDF, Scanned PDF, PNG, JPG (Max 25MB)
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 6px;">
+                        <label style="font-weight: bold; font-size: 11px;">Document Role:</label>
+                        <select id="doc-role-select" class="sys-select">
+                            <option value="QUESTION_PAPER" selected>Question Paper (Exam)</option>
+                            <option value="ANSWER_KEY">Answer Key Document</option>
+                            <option value="COMBINED">Combined (Questions + Answers)</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 6px;">
+                        <button class="sys-button" style="width: 100%; justify-content: center;" onclick="uploadSelectedFile()">
+                            Submit to Ingestion Queue
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 2: Asynchronous Status & Progress -->
+                <div class="sys-groupbox">
+                    <span class="sys-groupbox-legend">Asynchronous Worker Status</span>
+                    
+                    <div style="font-size: 11px; margin-top: 4px;">
+                        <div>Document: <strong id="status-doc-name">None Selected</strong></div>
+                        <div style="margin-top: 2px;">Status: <span id="status-badge" class="sys-flag-confident" style="background:#808080;">IDLE</span></div>
+                    </div>
+
+                    <!-- Authentic Windows 95 Segmented Block Progress Bar -->
+                    <div class="sys-progress-container sys-bevel-inset">
+                        <div class="sys-progress-blocks" id="progress-block-track">
+                            <!-- Chunks appended dynamically -->
+                        </div>
+                    </div>
+                    <div id="progress-text" style="font-family: var(--sys-font-mono); font-size: 10px; margin-top: 3px; text-align: right;">
+                        0% Complete
+                    </div>
+                </div>
+
+                <!-- Group 3: Document Archive -->
+                <div class="sys-groupbox" style="flex: 1; display: flex; flex-direction: column;">
+                    <span class="sys-groupbox-legend">Processed Documents</span>
+                    <div class="sys-doc-list sys-bevel-inset" id="documents-list-container" style="flex: 1; margin-top: 6px;">
+                        <div style="padding: 10px; text-align: center; color: #666;">No documents loaded.</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Questions & Extraction Review Desk -->
+            <div class="sys-panel-right">
+                
+                <!-- Filter Tabs -->
+                <div class="sys-tabs">
+                    <div class="sys-tab active" id="tab-all" onclick="switchFilterTab('all')">
+                        All Questions <span class="sys-tab-badge" id="badge-count-all" style="background:#000080;">0</span>
+                    </div>
+                    <div class="sys-tab" id="tab-review" onclick="switchFilterTab('review')">
+                        Needs Review [!] <span class="sys-tab-badge" id="badge-count-review">0</span>
+                    </div>
+                    <div class="sys-tab" id="tab-confident" onclick="switchFilterTab('confident')">
+                        High Confidence <span class="sys-tab-badge" id="badge-count-confident" style="background:#008000;">0</span>
+                    </div>
+                </div>
+
+                <!-- Extracted Questions Viewport -->
+                <div class="sys-question-viewport sys-bevel-inset" id="questions-viewport">
+                    <div style="padding: 40px; text-align: center; font-family: var(--sys-font-mono);">
+                        <h3>DOCUMENT INTELLIGENCE WORKBENCH</h3>
+                        <p style="margin-top: 10px; color: #555;">Select or upload a document to view extracted questions, options, and confidence metrics.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Statusbar -->
+        <div class="sys-statusbar">
+            <div class="sys-status-cell sys-bevel-inset" id="sb-status">System Ready. Authorized User Connected.</div>
+            <div class="sys-status-cell sys-bevel-inset" id="sb-db">Engine: PostgreSQL / SQLite Async</div>
+            <div class="sys-status-cell sys-bevel-inset" id="sb-queue">Queue: Active Dispatcher</div>
+        </div>
+
+    </div>
+
+    <!-- Modal Dialog: JSON Structured Export Viewer -->
+    <div class="sys-modal-overlay" id="export-modal">
+        <div class="sys-window sys-bevel-outset sys-modal-content">
+            <div class="sys-titlebar">
+                <span>Standardized JSON Export (Assignment Section 7)</span>
+                <div class="sys-titlebar-controls">
+                    <button class="sys-control-btn" onclick="closeExportModal()">&#10006;</button>
+                </div>
+            </div>
+            <div style="padding: 8px; flex: 1; display: flex; flex-direction: column;">
+                <textarea class="sys-code-viewer sys-bevel-inset" id="export-json-content" readonly></textarea>
+                <div style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button class="sys-button" onclick="copyJsonToClipboard()">Copy JSON</button>
+                    <button class="sys-button" onclick="downloadJsonFile()">Download .json</button>
+                    <button class="sys-button" onclick="closeExportModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog: Associate External Answer Key -->
+    <div class="sys-modal-overlay" id="associate-modal">
+        <div class="sys-window sys-bevel-outset" style="width: 500px;">
+            <div class="sys-titlebar">
+                <span>Associate External Answer Key Document</span>
+                <div class="sys-titlebar-controls">
+                    <button class="sys-control-btn" onclick="closeAssociateModal()">&#10006;</button>
+                </div>
+            </div>
+            <div style="padding: 12px;">
+                <p style="font-size: 11px;">Select a previously uploaded Answer Key document to merge answers with the active question paper:</p>
+                <select id="associate-key-doc-select" class="sys-select" style="margin-top: 8px;"></select>
+                <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button class="sys-button" onclick="submitAnswerKeyAssociation()">Associate Now</button>
+                    <button class="sys-button" onclick="closeAssociateModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/workbench.js"></script>
+</body>
+</html>
