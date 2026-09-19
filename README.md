@@ -3,7 +3,10 @@
 
 A scalable, production-oriented **Document Intelligence & Question Extraction Service** built with **FastAPI**, **PostgreSQL**, **Redis**, and **Google Gemini Multimodal Vision AI** (with an offline rule-based fallback engine). It converts unstructured examination documents (PDFs, scans, photos) into standardized, machine-readable structured questions.
 
-Included is a **Classic Retro System Workbench UI** conforming strictly to [`DESIGN_THEME.md`](./DESIGN_THEME.md) (tactile 3D bevels, navy titlebars, segmented block progress bar, split-screen review desk, and 1-click JSON export).
+Included is a **Minimalist Modern Engineering Workbench UI** conforming strictly to [`DESIGN_THEME.md`](./DESIGN_THEME.md) (Red & Orange theme, simple 1px borders, subtle 4px/6px corners, split-screen review desk, multi-tenant auth modal, and 1-click JSON export).
+
+> 📖 **Looking for a complete step-by-step walkthrough?**  
+> Check out the **[Complete Step-by-Step Usage & Run Guide (INSTRUCTIONS.md)](./INSTRUCTIONS.md)** for detailed installation, UI walkthrough, and evaluation instructions.
 
 ---
 
@@ -21,6 +24,7 @@ Included is a **Classic Retro System Workbench UI** conforming strictly to [`DES
    - Dedicated Review Queue endpoint (`GET /api/v1/documents/{id}/review-items`).
 6. **Standardized System-Independent Output**: Conforms to Assignment Section 7 schema, ready for downstream assessment engines.
 7. **Complete Deliverables**: Docker Compose, Alembic Migrations, Pytest Suite (100% pass), Postman Collection, and Architecture Docs.
+8. **Dual-Mode Authentication**: Seamless evaluator auto-session + interactive multi-tenant modal ([`AUTH_ARCHITECTURE.md`](./AUTH_ARCHITECTURE.md)).
 
 ---
 
@@ -32,7 +36,7 @@ Included is a **Classic Retro System Workbench UI** conforming strictly to [`DES
 - **Document Preprocessing**: PyMuPDF (`fitz`), Pillow (200 DPI high-res page rendering)
 - **AI / Vision Engine**: Google Gemini Multimodal Vision 2.5-Flash + Local Rule-Based Regex Fallback
 - **Authentication**: JWT (OAuth2 Bearer) + 12-round Bcrypt password hashing
-- **Frontend UI**: Classic Retro System Workbench (Vanilla HTML5 + CSS + JS)
+- **Frontend UI**: Modern Minimalist Engineering Workbench (Red & Orange Theme, Vanilla HTML5 + CSS + JS)
 
 ---
 
