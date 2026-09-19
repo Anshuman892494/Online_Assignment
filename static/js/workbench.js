@@ -39,10 +39,165 @@ async function authenticateDefaultUser() {
         if (res.ok) {
             const data = await res.json();
             authToken = data.access_token;
-            document.getElementById('sb-status').innerText = `Logged in: ${email}`;
+            document.getElementById('sb-status').innerText = `${email}`;
         }
     } catch (e) {
         console.warn("Auth initialization note:", e);
+    }
+}
+
+// --- Interactive Auth Modal Controller (Option B) ---
+function openAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        hideAuthAlert();
+        modal.classList.add('open');
+    }
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        modal.classList.remove('open');
+    }
+}
+
+function switchAuthTab(tab) {
+    hideAuthAlert();
+    const loginTab = document.getElementById('auth-tab-login');
+    const regTab = document.getElementById('auth-tab-register');
+    const loginForm = document.getElementById('auth-form-login');
+    const regForm = document.getElementById('auth-form-register');
+
+    if (tab === 'login') {
+        loginTab.classList.add('active');
+        regTab.classList.remove('active');
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+    } else {
+        loginTab.classList.remove('active');
+        regTab.classList.add('active');
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+    }
+}
+
+function showAuthAlert(msg, isError = true) {
+    const el = document.getElementById('auth-alert');
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.backgroundColor = isError ? '#fef2f2' : '#f0fdf4';
+    el.style.color = isError ? '#dc2626' : '#16a34a';
+    el.style.border = `1px solid ${isError ? '#fecaca' : '#bbf7d0'}`;
+    el.innerText = msg;
+}
+
+function hideAuthAlert() {
+    const el = document.getElementById('auth-alert');
+    if (el) el.style.display = 'none';
+}
+
+function loadDemoEvaluatorCredentials() {
+    document.getElementById('auth-login-email').value = "evaluator@pragatibharati.org";
+    document.getElementById('auth-login-password').value = "EvaluatorSecure2026!";
+    showAuthAlert("Demo credentials pre-filled.", false);
+}
+
+async function handleManualLogin() {
+    hideAuthAlert();
+    const email = document.getElementById('auth-login-email').value.trim();
+    const password = document.getElementById('auth-login-password').value;
+
+    if (!email || !password) {
+        showAuthAlert("Please enter both email and password.");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/v1/auth/login/json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            authToken = data.access_token;
+            document.getElementById('sb-status').innerText = `${email}`;
+            closeAuthModal();
+            // Reset active selection and reload user's documents
+            activeDocumentId = null;
+            document.getElementById('status-doc-name').innerText = "None Selected";
+            setStatusBadge("IDLE");
+            updateProgressBar(0);
+            document.getElementById('questions-viewport').innerHTML = `
+                <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                    <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Signed in as ${escapeHtml(email)}</h3>
+                    <p style="margin-top: 6px; font-size: 13px;">Loaded multi-tenant documents for your account.</p>
+                </div>
+            `;
+            await loadDocumentsList();
+        } else {
+            const err = await res.json();
+            showAuthAlert(err.detail || "Authentication failed.");
+        }
+    } catch (e) {
+        showAuthAlert("Network error: " + e.message);
+    }
+}
+
+async function handleManualRegister() {
+    hideAuthAlert();
+    const fullName = document.getElementById('auth-reg-name').value.trim();
+    const email = document.getElementById('auth-reg-email').value.trim();
+    const password = document.getElementById('auth-reg-password').value;
+
+    if (!fullName || !email || !password) {
+        showAuthAlert("Please fill in all registration fields.");
+        return;
+    }
+
+    if (password.length < 6) {
+        showAuthAlert("Password must be at least 6 characters.");
+        return;
+    }
+
+    try {
+        const regRes = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, full_name: fullName })
+        });
+
+        if (!regRes.ok) {
+            const err = await regRes.json();
+            showAuthAlert(err.detail || "Registration failed.");
+            return;
+        }
+
+        // Auto login on successful register
+        const loginRes = await fetch('/api/v1/auth/login/json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (loginRes.ok) {
+            const data = await loginRes.json();
+            authToken = data.access_token;
+            document.getElementById('sb-status').innerText = `${email}`;
+            closeAuthModal();
+            activeDocumentId = null;
+            document.getElementById('status-doc-name').innerText = "None Selected";
+            setStatusBadge("IDLE");
+            updateProgressBar(0);
+            await loadDocumentsList();
+        } else {
+            switchAuthTab('login');
+            showAuthAlert("Account created successfully! Please sign in.", false);
+        }
+    } catch (e) {
+        showAuthAlert("Registration error: " + e.message);
     }
 }
 

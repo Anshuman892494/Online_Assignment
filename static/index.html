@@ -40,10 +40,14 @@
                 </a>
                 
                 <!-- Authenticated User Status -->
-                <div class="sys-user-chip">
+                <div class="sys-user-chip" onclick="openAuthModal()" style="cursor: pointer;" title="Click to Switch User or Sign In">
                     <span class="sys-dot-online"></span>
                     <span id="sb-status">Connecting...</span>
                 </div>
+                <button class="sys-button" onclick="openAuthModal()" title="Switch Account / Sign In / Register">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Account
+                </button>
             </div>
         </header>
 
@@ -176,6 +180,75 @@
                 <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px;">
                     <button class="sys-button primary" onclick="submitAnswerKeyAssociation()">Associate Now</button>
                     <button class="sys-button" onclick="closeAssociateModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog: User Authentication (Login & Signup) -->
+    <div class="sys-modal-overlay" id="auth-modal">
+        <div class="sys-modal-content" style="width: 440px;">
+            <div class="sys-titlebar" style="border-bottom: 1px solid var(--wb-border);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--wb-primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>User Authentication & Multi-Tenancy</span>
+                </div>
+                <button class="sys-button" style="padding: 2px 8px; font-size: 11px;" onclick="closeAuthModal()">✕</button>
+            </div>
+            
+            <!-- Modal Tabs: Sign In / Create Account -->
+            <div class="sys-tabs" style="padding: 0 16px;">
+                <div class="sys-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">
+                    Sign In
+                </div>
+                <div class="sys-tab" id="auth-tab-register" onclick="switchAuthTab('register')">
+                    Create Account
+                </div>
+            </div>
+            
+            <div style="padding: 20px;">
+                <!-- Error / Notification alert -->
+                <div id="auth-alert" style="display: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 14px;"></div>
+                
+                <!-- Sign In Form -->
+                <div id="auth-form-login">
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); display: block; margin-bottom: 4px;">Email Address</label>
+                        <input type="email" id="auth-login-email" class="sys-input" placeholder="evaluator@pragatibharati.org" value="evaluator@pragatibharati.org">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); display: block; margin-bottom: 4px;">Password</label>
+                        <input type="password" id="auth-login-password" class="sys-input" placeholder="••••••••" value="EvaluatorSecure2026!">
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 18px;">
+                        <button class="sys-button primary" style="flex: 1; justify-content: center;" onclick="handleManualLogin()">Sign In</button>
+                        <button class="sys-button" onclick="closeAuthModal()">Cancel</button>
+                    </div>
+                    <div style="margin-top: 14px; text-align: center; border-top: 1px solid var(--wb-border); padding-top: 12px;">
+                        <a href="javascript:void(0)" onclick="loadDemoEvaluatorCredentials()" style="font-size: 11px; color: var(--wb-primary); text-decoration: none; font-weight: 500;">
+                            ⚡ Load Default Demo Evaluator Credentials
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="auth-form-register" style="display: none;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); display: block; margin-bottom: 4px;">Full Name</label>
+                        <input type="text" id="auth-reg-name" class="sys-input" placeholder="Dr. Vikram Sarabhai">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); display: block; margin-bottom: 4px;">Email Address</label>
+                        <input type="email" id="auth-reg-email" class="sys-input" placeholder="educator@university.edu">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); display: block; margin-bottom: 4px;">Password (Min. 6 characters)</label>
+                        <input type="password" id="auth-reg-password" class="sys-input" placeholder="Create a secure password">
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 18px;">
+                        <button class="sys-button primary" style="flex: 1; justify-content: center;" onclick="handleManualRegister()">Create Account & Sign In</button>
+                        <button class="sys-button" onclick="closeAuthModal()">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

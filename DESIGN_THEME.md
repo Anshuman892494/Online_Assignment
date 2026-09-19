@@ -121,7 +121,14 @@ To ensure maximum focus, screen space, and zero confusion, all unnecessary and n
   - Options list with radio selection and green "✓ Key Match" indicator.
   - In-place "✓ Approve Question" orange button to resolve review flags instantly.
 
-### D. Export Modal & Code Inspector
+### D. User Authentication & Multi-Tenancy Modal
+- Centered 440px modal container with `border-radius: 6px` and crisp 1px border.
+- Dual tab switch: `[ Sign In ]` and `[ Create Account ]`.
+- Live alerts with rose-red background (`#fef2f2`) and crimson text for errors.
+- 1-Click "⚡ Load Default Demo Evaluator Credentials" link.
+- Full details documented in [`AUTH_ARCHITECTURE.md`](file:///c:/Users/anshu/OneDrive/Desktop/Assignment/AUTH_ARCHITECTURE.md).
+
+### E. Export Modal & Code Inspector
 - High-contrast dark code inspector (`#1c1917` warm dark slate background, `#fb923c` warm amber syntax).
 - 1-Click **"Copy JSON"** and **"Download .json"** buttons.
 

@@ -64,7 +64,8 @@
      - Supported formats: PDF, JPEG, JPG, PNG.
      - UUID-based sanitized storage saving to `storage/uploads/`.
   4. Implement `POST /api/v1/documents/upload` endpoint returning `202 Accepted` with initial status.
-  5. Commit and push Phase 2 to GitHub remote.
+  5. Document Dual Authentication Architecture (Option A: Evaluator Auto-Session + Option B: Interactive Modal) in `AUTH_ARCHITECTURE.md`.
+  6. Commit and push Phase 2 to GitHub remote.
 
 ---
 
