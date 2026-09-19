@@ -103,6 +103,12 @@ async def test_preprocessor_and_question_extraction():
 
         assert len(questions) >= 3, f"Expected at least 3 questions, got {len(questions)}"
 
+        doc_check_stmt = select(Document).where(Document.id == doc_id)
+        doc_check_res = await session.execute(doc_check_stmt)
+        completed_doc = doc_check_res.scalars().first()
+        assert completed_doc.status == "COMPLETED"
+        assert completed_doc.progress == 100
+
         q1 = next((q for q in questions if q.question_number == "1"), None)
         assert q1 is not None
         assert "binary search tree" in q1.question_text.lower()

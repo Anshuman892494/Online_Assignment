@@ -93,6 +93,13 @@ class ExtractionEngine:
         # 3. Persist Extracted Questions and Answer Keys to Database
         await self._persist_results(document_id, extracted_data, doc_role)
 
+        # 4. Finalize Document Status to COMPLETED
+        await task_queue.update_progress(
+            document_id=document_id,
+            progress=100,
+            status="COMPLETED"
+        )
+
     async def _extract_with_gemini_vision(self, preprocessed: DocumentPreprocessedData) -> Optional[Dict[str, Any]]:
         """Invokes Google Gemini Multimodal Vision API with page images."""
         try:
