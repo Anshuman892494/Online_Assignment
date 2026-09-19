@@ -60,7 +60,14 @@ async def root_workbench():
     """Serves the Classic Retro Workbench UI."""
     index_file = static_path / "index.html"
     if index_file.exists():
-        return FileResponse(index_file)
+        return FileResponse(
+            index_file,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
+        )
     return {"message": f"Welcome to {settings.APP_NAME}. Explore /docs for API."}
 
 from fastapi.responses import Response

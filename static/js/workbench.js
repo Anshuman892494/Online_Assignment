@@ -395,6 +395,13 @@ async function loadDocumentsList() {
 }
 
 async function deleteSingleDocument(docId, filename) {
+    if (!authToken) {
+        await authenticateDefaultUser();
+    }
+    if (!authToken) {
+        alert("Authentication required. Please log in first.");
+        return;
+    }
     if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
 
     try {
@@ -426,8 +433,16 @@ async function deleteSingleDocument(docId, filename) {
         alert("Delete error: " + e.message);
     }
 }
+window.deleteSingleDocument = deleteSingleDocument;
 
 async function clearAllDocuments() {
+    if (!authToken) {
+        await authenticateDefaultUser();
+    }
+    if (!authToken) {
+        alert("Authentication required. Please log in first.");
+        return;
+    }
     if (!confirm("Are you sure you want to clear ALL documents from the archive?")) return;
 
     try {
@@ -457,6 +472,7 @@ async function clearAllDocuments() {
         alert("Clear archive error: " + e.message);
     }
 }
+window.clearAllDocuments = clearAllDocuments;
 
 function selectActiveDocument(doc) {
     activeDocumentId = doc.id;
@@ -705,3 +721,26 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+// Explicit Global Window Bindings for HTML onclick handlers
+window.clearAllDocuments = clearAllDocuments;
+window.deleteSingleDocument = deleteSingleDocument;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.handleManualLogin = handleManualLogin;
+window.handleManualRegister = handleManualRegister;
+window.loadDemoEvaluatorCredentials = loadDemoEvaluatorCredentials;
+window.openAssociateModal = openAssociateModal;
+window.closeAssociateModal = closeAssociateModal;
+window.submitAnswerKeyAssociation = submitAnswerKeyAssociation;
+window.exportStructuredJson = exportStructuredJson;
+window.closeExportModal = closeExportModal;
+window.copyJsonToClipboard = copyJsonToClipboard;
+window.downloadJsonFile = downloadJsonFile;
+window.switchFilterTab = switchFilterTab;
+window.approveQuestion = approveQuestion;
+window.loadQuestionsForActiveDoc = loadQuestionsForActiveDoc;
+window.uploadSelectedFile = uploadSelectedFile;
+window.handleFileSelected = handleFileSelected;
+
