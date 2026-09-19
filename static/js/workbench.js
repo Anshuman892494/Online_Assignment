@@ -696,40 +696,166 @@ function downloadJsonFile() {
     URL.revokeObjectURL(url);
 }
 
-// --- Link Separate Answer Key Modal ---
-function openAssociateModal() {
+// --- Answer Key Intelligence & Association Modal ---
+async function openAnswerKeyModal() {
     if (!activeDocumentId) {
-        alert("Select a question paper document first.");
-        return;
+        if (userDocuments && userDocuments.length > 0) {
+            selectActiveDocument(userDocuments[0]);
+        } else {
+            alert("Please select or upload an examination document first.");
+            return;
+        }
     }
+
+    const modal = document.getElementById('associate-modal');
+    if (!modal) return;
+
+    // Set document title badge
+    const badge = document.getElementById('ak-doc-title-badge');
+    const activeDoc = userDocuments.find(d => d.id === activeDocumentId);
+    if (badge) badge.innerText = activeDoc ? activeDoc.filename : 'Active Document';
+
+    // 1. Fetch detected answer key for active doc
+    try {
+        const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || authToken;
+        const res = await fetch(`/api/v1/documents/${activeDocumentId}/answer-key`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+
+        const gridContainer = document.getElementById('ak-grid-container');
+        const countBadge = document.getElementById('ak-detected-count');
+        const confBadge = document.getElementById('ak-confidence-badge');
+
+        if (res.ok) {
+            const data = await res.json();
+            const keys = data.answer_keys || {};
+            const keyEntries = Object.entries(keys).sort((a, b) => {
+                const numA = parseInt(a[0]) || 0;
+                const numB = parseInt(b[0]) || 0;
+                return numA - numB;
+            });
+
+            if (countBadge) countBadge.innerText = keyEntries.length;
+            if (confBadge) confBadge.innerHTML = `Detection Confidence: <strong style="color: #16a34a;">${Math.round((data.detection_confidence || 0.95) * 100)}%</strong>`;
+
+            if (gridContainer) {
+                if (keyEntries.length === 0) {
+                    gridContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--wb-text-muted); font-size: 13px;">No embedded answer key detected in this document. You can link a separate answer key document from the "Link Separate Document" tab.</div>';
+                } else {
+                    gridContainer.innerHTML = keyEntries.map(([qNum, ans]) => `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #fff; border: 1px solid var(--wb-border); border-radius: 4px; font-family: var(--font-mono);">
+                            <span style="font-size: 12px; color: var(--wb-text-secondary); font-weight: 500;">Q${qNum}</span>
+                            <span style="font-size: 12px; font-weight: 700; color: #ea580c; background: #fff7ed; padding: 1px 6px; border-radius: 3px; border: 1px solid #ffedd5;">${escapeHtml(ans)}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Answer key fetch error:", e);
+    }
+
+    // 2. Populate candidate documents for linking
     const select = document.getElementById('associate-key-doc-select');
-    select.innerHTML = '';
-    const candidates = userDocuments.filter(d => d.id !== activeDocumentId);
-    if (candidates.length === 0) {
-        alert("No other uploaded documents available to link as an answer key.");
+    const emptyNote = document.getElementById('ak-link-empty-note');
+    const btnAssociate = document.getElementById('btn-associate-now');
+
+    if (select) {
+        select.innerHTML = '';
+        const candidates = userDocuments.filter(d => d.id !== activeDocumentId);
+        if (candidates.length === 0) {
+            if (emptyNote) emptyNote.style.display = 'block';
+            if (select) select.style.display = 'none';
+            if (btnAssociate) btnAssociate.disabled = true;
+        } else {
+            if (emptyNote) emptyNote.style.display = 'none';
+            if (select) select.style.display = 'block';
+            if (btnAssociate) btnAssociate.disabled = false;
+            candidates.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.innerText = `${doc.filename} (${doc.role})`;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    // Default to detected answers tab
+    switchAkTab('detected');
+    modal.classList.add('open');
+}
+
+function switchAkTab(tab) {
+    const tabDetected = document.getElementById('ak-tab-detected');
+    const tabLink = document.getElementById('ak-tab-link');
+    const panelDetected = document.getElementById('ak-panel-detected');
+    const panelLink = document.getElementById('ak-panel-link');
+
+    if (tab === 'detected') {
+        if (tabDetected) {
+            tabDetected.style.borderBottomColor = 'var(--wb-primary)';
+            tabDetected.style.color = 'var(--wb-primary)';
+            tabDetected.style.fontWeight = '600';
+        }
+        if (tabLink) {
+            tabLink.style.borderBottomColor = 'transparent';
+            tabLink.style.color = 'var(--wb-text-secondary)';
+            tabLink.style.fontWeight = '500';
+        }
+        if (panelDetected) panelDetected.style.display = 'block';
+        if (panelLink) panelLink.style.display = 'none';
+    } else {
+        if (tabLink) {
+            tabLink.style.borderBottomColor = 'var(--wb-primary)';
+            tabLink.style.color = 'var(--wb-primary)';
+            tabLink.style.fontWeight = '600';
+        }
+        if (tabDetected) {
+            tabDetected.style.borderBottomColor = 'transparent';
+            tabDetected.style.color = 'var(--wb-text-secondary)';
+            tabDetected.style.fontWeight = '500';
+        }
+        if (panelLink) panelLink.style.display = 'block';
+        if (panelDetected) panelDetected.style.display = 'none';
+    }
+}
+
+function copyAnswerKeyText() {
+    const items = document.querySelectorAll('#ak-grid-container > div');
+    if (!items || items.length === 0) {
+        alert("No answer keys to copy.");
         return;
     }
-    candidates.forEach(doc => {
-        const opt = document.createElement('option');
-        opt.value = doc.id;
-        opt.innerText = `${doc.filename} (${doc.role})`;
-        select.appendChild(opt);
+    const lines = [];
+    items.forEach(el => {
+        lines.push(el.innerText.replace('\n', ': ').trim());
     });
-    document.getElementById('associate-modal').classList.add('open');
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        alert("Answer keys copied to clipboard!");
+    }).catch(() => {
+        alert("Answer keys copied!");
+    });
 }
 
 function closeAssociateModal() {
-    document.getElementById('associate-modal').classList.remove('open');
+    const modal = document.getElementById('associate-modal');
+    if (modal) modal.classList.remove('open');
 }
 
 async function submitAnswerKeyAssociation() {
-    const keyDocId = document.getElementById('associate-key-doc-select').value;
+    const keyDocSelect = document.getElementById('associate-key-doc-select');
+    if (!keyDocSelect || !keyDocSelect.value) {
+        alert("Please select an answer key document from the list.");
+        return;
+    }
+    const keyDocId = keyDocSelect.value;
     try {
+        const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || authToken;
         const res = await fetch(`/api/v1/documents/${activeDocumentId}/associate-answer-key`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ answer_key_document_id: keyDocId })
         });
@@ -739,11 +865,41 @@ async function submitAnswerKeyAssociation() {
             closeAssociateModal();
             await loadQuestionsForActiveDoc();
         } else {
-            const err = await res.json();
+            const err = await res.json().catch(() => ({}));
             alert(`Association Failed: ${err.detail || 'Unknown error'}`);
         }
     } catch (e) {
         alert("Association error: " + e.message);
+    }
+}
+
+// --- Smooth Refresh All Handler ---
+async function handleRefreshAll() {
+    const btnText = document.getElementById('refresh-btn-text');
+    const icon = document.getElementById('refresh-icon');
+
+    if (icon) {
+        icon.style.transition = 'transform 0.6s ease';
+        icon.style.transform = 'rotate(360deg)';
+    }
+
+    try {
+        await loadDocumentsList();
+        if (activeDocumentId) {
+            await loadQuestionsForActiveDoc();
+        }
+        if (btnText) {
+            btnText.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Updated</span>';
+            setTimeout(() => {
+                btnText.innerText = 'Refresh';
+                if (icon) {
+                    icon.style.transition = 'none';
+                    icon.style.transform = 'none';
+                }
+            }, 900);
+        }
+    } catch (e) {
+        console.warn("Refresh error:", e);
     }
 }
 
@@ -762,9 +918,13 @@ window.switchAuthTab = switchAuthTab;
 window.handleManualLogin = handleManualLogin;
 window.handleManualRegister = handleManualRegister;
 window.loadDemoEvaluatorCredentials = loadDemoEvaluatorCredentials;
-window.openAssociateModal = openAssociateModal;
+window.openAnswerKeyModal = openAnswerKeyModal;
+window.openAssociateModal = openAnswerKeyModal;
 window.closeAssociateModal = closeAssociateModal;
+window.switchAkTab = switchAkTab;
+window.copyAnswerKeyText = copyAnswerKeyText;
 window.submitAnswerKeyAssociation = submitAnswerKeyAssociation;
+window.handleRefreshAll = handleRefreshAll;
 window.exportStructuredJson = exportStructuredJson;
 window.closeExportModal = closeExportModal;
 window.copyJsonToClipboard = copyJsonToClipboard;

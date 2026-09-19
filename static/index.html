@@ -35,20 +35,20 @@
 
             <div class="sys-titlebar-right">
                 <!-- Direct Action Buttons -->
-                <button class="sys-button" onclick="openAssociateModal()" title="Link Answer Key Document">
+                <button class="sys-button" id="btn-view-answer-key" onclick="openAnswerKeyModal()" title="View Detected Answer Key & Link Documents">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
-                    Link Answer Key
+                    Answer Key
                 </button>
-                <button class="sys-button" onclick="loadQuestionsForActiveDoc()" title="Refresh Questions">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="sys-button" id="btn-refresh-all" onclick="handleRefreshAll()" title="Refresh Questions & Document Archive">
+                    <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 4 23 10 17 10"></polyline>
                         <polyline points="1 20 1 14 7 14"></polyline>
                         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                     </svg>
-                    Refresh
+                    <span id="refresh-btn-text">Refresh</span>
                 </button>
                 <button class="sys-button primary" onclick="exportStructuredJson()"
                     title="Export Standard Section 7 JSON">
@@ -254,22 +254,66 @@
         </div>
     </div>
 
-    <!-- Modal Dialog: Associate External Answer Key -->
+    <!-- Modal Dialog: Answer Key Intelligence Viewer & Linker -->
     <div class="sys-modal-overlay" id="associate-modal">
-        <div class="sys-modal-content" style="width: 500px;">
-            <div class="sys-titlebar" style="border-bottom: 1px solid var(--wb-border);">
-                <span>Link Separate Answer Key Document</span>
-                <button class="sys-button" style="padding: 2px 8px; font-size: 11px;"
-                    onclick="closeAssociateModal()">✕</button>
-            </div>
-            <div style="padding: 16px;">
-                <p style="font-size: 13px; color: var(--wb-text-secondary);">Select an uploaded Answer Key document to
-                    associate with the current active question paper:</p>
-                <select id="associate-key-doc-select" class="sys-select" style="margin-top: 12px;"></select>
-                <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px;">
-                    <button class="sys-button primary" onclick="submitAnswerKeyAssociation()">Associate Now</button>
-                    <button class="sys-button" onclick="closeAssociateModal()">Cancel</button>
+        <div class="sys-modal-content" style="width: 680px; max-width: 95vw; max-height: 85vh;">
+            <div class="sys-titlebar" style="border-bottom: 1px solid var(--wb-border); padding: 10px 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--wb-primary);">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span style="font-weight: 600; font-size: 14px;">Answer Key Intelligence</span>
+                    <span id="ak-doc-title-badge" style="font-size: 11px; background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 4px; font-weight: 600; border: 1px solid #ffedd5;">Active Document</span>
                 </div>
+                <button class="sys-button" style="padding: 2px 8px; font-size: 12px;" onclick="closeAssociateModal()">✕</button>
+            </div>
+
+            <!-- Tabs: Detected Keys vs Link External Document -->
+            <div style="display: flex; border-bottom: 1px solid var(--wb-border); background: #fafaf9; padding: 0 16px;">
+                <button id="ak-tab-detected" onclick="switchAkTab('detected')" style="padding: 10px 16px; font-size: 12px; font-weight: 600; border: none; background: none; border-bottom: 2px solid var(--wb-primary); color: var(--wb-primary); cursor: pointer;">
+                    Detected Answers <span id="ak-detected-count" style="font-size: 10px; background: #ea580c; color: #fff; padding: 1px 6px; border-radius: 10px;">0</span>
+                </button>
+                <button id="ak-tab-link" onclick="switchAkTab('link')" style="padding: 10px 16px; font-size: 12px; font-weight: 500; border: none; background: none; border-bottom: 2px solid transparent; color: var(--wb-text-secondary); cursor: pointer;">
+                    Link Separate Document
+                </button>
+            </div>
+
+            <div style="padding: 16px; flex: 1; overflow-y: auto;">
+                <!-- Tab Panel 1: Detected Answer Keys -->
+                <div id="ak-panel-detected">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span id="ak-confidence-badge" style="font-size: 12px; color: var(--wb-text-secondary);">
+                            Detection Confidence: <strong style="color: #16a34a;">95%</strong>
+                        </span>
+                        <button class="sys-button" onclick="copyAnswerKeyText()" style="padding: 3px 10px; font-size: 11px;">
+                            Copy All Keys
+                        </button>
+                    </div>
+                    <div id="ak-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; max-height: 320px; overflow-y: auto; padding: 10px; background: #f5f5f4; border-radius: 6px; border: 1px solid var(--wb-border);">
+                        <!-- Dynamic items e.g. Q1: A -->
+                    </div>
+                </div>
+
+                <!-- Tab Panel 2: Link External Answer Key File -->
+                <div id="ak-panel-link" style="display: none;">
+                    <p style="font-size: 13px; color: var(--wb-text-secondary); margin-bottom: 12px;">
+                        Select an uploaded Answer Key document to correlate and verify against the questions in the active examination paper:
+                    </p>
+                    <div id="ak-link-select-container">
+                        <select id="associate-key-doc-select" class="sys-select" style="width: 100%;"></select>
+                    </div>
+                    <div id="ak-link-empty-note" style="display: none; padding: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 4px; font-size: 12px; color: #9a3412;">
+                        No other uploaded documents found in your archive. To link a separate answer key, upload an Answer Key file via the Ingestion Gateway on the left with role set to <strong>"Answer Key"</strong>.
+                    </div>
+                    <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button class="sys-button primary" id="btn-associate-now" onclick="submitAnswerKeyAssociation()">Associate Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 12px 16px; border-top: 1px solid var(--wb-border); display: flex; justify-content: flex-end; background: #fafaf9;">
+                <button class="sys-button" onclick="closeAssociateModal()">Close</button>
             </div>
         </div>
     </div>
@@ -492,10 +536,55 @@
                 alert("Delete document error: " + e.message);
             }
         };
+
+        window.handleRefreshAll = async function() {
+            const btnText = document.getElementById('refresh-btn-text');
+            const icon = document.getElementById('refresh-icon');
+            if (icon) {
+                icon.style.transition = 'transform 0.6s ease';
+                icon.style.transform = 'rotate(360deg)';
+            }
+            try {
+                if (typeof window.loadDocumentsList === 'function') await window.loadDocumentsList();
+                if (window.activeDocumentId && typeof window.loadQuestionsForActiveDoc === 'function') {
+                    await window.loadQuestionsForActiveDoc();
+                }
+                if (btnText) {
+                    btnText.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Updated</span>';
+                    setTimeout(() => {
+                        btnText.innerText = 'Refresh';
+                        if (icon) {
+                            icon.style.transition = 'none';
+                            icon.style.transform = 'none';
+                        }
+                    }, 900);
+                }
+            } catch (e) {
+                console.warn("Refresh error:", e);
+            }
+        };
+
+        window.loadQuestionsForActiveDoc = async function() {
+            if (!window.activeDocumentId) return;
+            try {
+                const token = await window.getOrFetchAuthToken();
+                const res = await fetch('/api/v1/documents/' + window.activeDocumentId + '/questions?limit=200', {
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    window.allLoadedQuestions = data.questions;
+                    if (typeof window.updateTabCounts === 'function') window.updateTabCounts();
+                    if (typeof window.renderQuestions === 'function') window.renderQuestions();
+                }
+            } catch (err) {
+                console.error("Error loading questions:", err);
+            }
+        };
     </script>
 
     <!-- Controller Script -->
-    <script src="/static/js/workbench.js?v=3.2.0"></script>
+    <script src="/static/js/workbench.js?v=3.3.0"></script>
 </body>
 
 </html>
