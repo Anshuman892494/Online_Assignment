@@ -41,3 +41,7 @@ class Question(Base, TimestampMixin):
 
     # Relationships
     document: Mapped["Document"] = relationship("Document", back_populates="questions")
+
+    @property
+    def confidence(self) -> float:
+        return self.confidence_score
