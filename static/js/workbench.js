@@ -22,24 +22,33 @@ async function authenticateDefaultUser() {
         const email = "evaluator@pragatibharati.org";
         const password = "EvaluatorSecure2026!";
 
-        // Register if not exists
-        await fetch('/api/v1/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
-        });
-
-        // Login
-        const res = await fetch('/api/v1/auth/login/json', {
+        // 1. Try login first
+        let res = await fetch('/api/v1/auth/login/json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
+        // 2. If user does not exist yet (401), register and then login
+        if (res.status === 401) {
+            await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
+            });
+
+            res = await fetch('/api/v1/auth/login/json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+        }
+
         if (res.ok) {
             const data = await res.json();
             authToken = data.access_token;
-            document.getElementById('sb-status').innerText = `${email}`;
+            const sb = document.getElementById('sb-status');
+            if (sb) sb.innerText = `${email}`;
         }
     } catch (e) {
         console.warn("Auth initialization note:", e);
@@ -370,8 +379,11 @@ async function loadDocumentsList() {
                 const item = document.createElement('div');
                 item.className = `sys-doc-item ${doc.id === activeDocumentId ? 'active' : ''}`;
                 item.innerHTML = `
-                    <span>&#128196; ${doc.filename.substring(0, 22)}</span>
-                    <span>[${doc.status}]</span>
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 175px;" title="${escapeHtml(doc.filename)}">📄 ${escapeHtml(doc.filename.substring(0, 22))}</span>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 10px; font-weight: 500;">[${doc.status}]</span>
+                        <button class="sys-doc-del-btn" onclick="event.stopPropagation(); deleteSingleDocument('${doc.id}', '${escapeHtml(doc.filename)}')" title="Delete this document">✕</button>
+                    </div>
                 `;
                 item.onclick = () => selectActiveDocument(doc);
                 container.appendChild(item);
@@ -379,6 +391,70 @@ async function loadDocumentsList() {
         }
     } catch (err) {
         console.error("Error loading documents:", err);
+    }
+}
+
+async function deleteSingleDocument(docId, filename) {
+    if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
+
+    try {
+        const res = await fetch(`/api/v1/documents/${docId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (res.ok) {
+            if (activeDocumentId === docId) {
+                activeDocumentId = null;
+                document.getElementById('status-doc-name').innerText = "None Selected";
+                setStatusBadge("IDLE");
+                updateProgressBar(0);
+                document.getElementById('questions-viewport').innerHTML = `
+                    <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: var(--wb-border-dark);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Document Intelligence Workbench</h3>
+                        <p style="margin-top: 6px; font-size: 13px;">Select an uploaded document from the archive on the left to review extracted questions.</p>
+                    </div>
+                `;
+            }
+            await loadDocumentsList();
+        } else {
+            const err = await res.json();
+            alert(`Failed to delete document: ${err.detail || 'Unknown error'}`);
+        }
+    } catch (e) {
+        alert("Delete error: " + e.message);
+    }
+}
+
+async function clearAllDocuments() {
+    if (!confirm("Are you sure you want to clear ALL documents from the archive?")) return;
+
+    try {
+        const res = await fetch('/api/v1/documents', {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (res.ok) {
+            activeDocumentId = null;
+            document.getElementById('status-doc-name').innerText = "None Selected";
+            setStatusBadge("IDLE");
+            updateProgressBar(0);
+            document.getElementById('questions-viewport').innerHTML = `
+                <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: var(--wb-border-dark);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Archive Cleared</h3>
+                    <p style="margin-top: 6px; font-size: 13px;">All documents have been removed. Upload a new examination paper to begin.</p>
+                </div>
+            `;
+            await loadDocumentsList();
+        } else {
+            const err = await res.json();
+            alert(`Failed to clear archive: ${err.detail || 'Unknown error'}`);
+        }
+    } catch (e) {
+        alert("Clear archive error: " + e.message);
     }
 }
 

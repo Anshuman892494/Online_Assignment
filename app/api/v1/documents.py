@@ -180,3 +180,87 @@ async def get_document_detail(
             detail="Document not found or access unauthorized."
         )
     return doc
+
+import shutil
+from sqlalchemy import delete
+
+@router.delete("/{document_id}", status_code=status.HTTP_200_OK)
+async def delete_document(
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Deletes a document, cascading associated questions, answer keys, and disk files."""
+    stmt = select(Document).where(Document.id == document_id, Document.user_id == current_user.id)
+    result = await db.execute(stmt)
+    doc = result.scalars().first()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found or access unauthorized."
+        )
+
+    # Clean relationships
+    await db.execute(
+        delete(DocumentRelationship).where(
+            (DocumentRelationship.parent_document_id == document_id) |
+            (DocumentRelationship.related_document_id == document_id)
+        )
+    )
+
+    # Clean physical files on disk
+    if doc.storage_path and Path(doc.storage_path).exists():
+        try:
+            Path(doc.storage_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    extracted_folder = Path(settings.EXTRACTED_DIR) / document_id
+    if extracted_folder.exists():
+        try:
+            shutil.rmtree(extracted_folder, ignore_errors=True)
+        except Exception:
+            pass
+
+    # Delete Document (cascades questions and answer keys)
+    await db.delete(doc)
+    await db.commit()
+
+    return {"status": "SUCCESS", "message": f"Document {document_id} deleted successfully."}
+
+@router.delete("", status_code=status.HTTP_200_OK)
+async def clear_all_documents(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Deletes all documents and extracted data for the currently authenticated user."""
+    stmt = select(Document).where(Document.user_id == current_user.id)
+    result = await db.execute(stmt)
+    docs = result.scalars().all()
+
+    count = len(docs)
+    for doc in docs:
+        # Clean relationships
+        await db.execute(
+            delete(DocumentRelationship).where(
+                (DocumentRelationship.parent_document_id == doc.id) |
+                (DocumentRelationship.related_document_id == doc.id)
+            )
+        )
+        # Clean files
+        if doc.storage_path and Path(doc.storage_path).exists():
+            try:
+                Path(doc.storage_path).unlink(missing_ok=True)
+            except Exception:
+                pass
+        extracted_folder = Path(settings.EXTRACTED_DIR) / doc.id
+        if extracted_folder.exists():
+            try:
+                shutil.rmtree(extracted_folder, ignore_errors=True)
+            except Exception:
+                pass
+        await db.delete(doc)
+
+    await db.commit()
+    return {"status": "SUCCESS", "message": f"Successfully cleared {count} documents from archive."}

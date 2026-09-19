@@ -305,6 +305,24 @@ body {
     font-weight: 600;
 }
 
+.sys-doc-del-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    transition: all 0.15s ease;
+}
+
+.sys-doc-del-btn:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
 /* --- Right Panel: Questions Viewport --- */
 .sys-panel-right {
     display: flex;

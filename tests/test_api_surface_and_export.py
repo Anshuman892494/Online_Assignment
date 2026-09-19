@@ -129,3 +129,17 @@ async def test_questions_api_and_standard_export():
         assert len(exp_data["questions"]) == 2
         assert "source_pages" in exp_data["questions"][0]
         assert "confidence" in exp_data["questions"][0]
+
+        # 8. Test DELETE /documents/{id}
+        del_res = await client.delete(f"/api/v1/documents/{doc_id}", headers=headers)
+        assert del_res.status_code == 200
+        assert del_res.json()["status"] == "SUCCESS"
+
+        # Verify Document no longer exists
+        get_res = await client.get(f"/api/v1/documents/{doc_id}", headers=headers)
+        assert get_res.status_code == 404
+
+        # 9. Test DELETE /documents (Clear All)
+        clear_res = await client.delete("/api/v1/documents", headers=headers)
+        assert clear_res.status_code == 200
+        assert clear_res.json()["status"] == "SUCCESS"

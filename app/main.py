@@ -63,6 +63,13 @@ async def root_workbench():
         return FileResponse(index_file)
     return {"message": f"Welcome to {settings.APP_NAME}. Explore /docs for API."}
 
+from fastapi.responses import Response
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Silently handles browser favicon requests with 204 No Content."""
+    return Response(status_code=204)
+
 @app.get("/health", tags=["System"])
 @app.get("/api/v1/health", tags=["System"])
 async def health_check():
