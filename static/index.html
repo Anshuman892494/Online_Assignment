@@ -153,7 +153,7 @@
                     <div
                         style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                         <span class="sys-groupbox-legend" style="margin-bottom: 0;">Document Archive</span>
-                        <button class="sys-button"
+                        <button class="sys-button" id="btn-clear-all"
                             style="padding: 2px 8px; font-size: 11px; color: var(--wb-accent); border-color: #fecaca; background: #fff5f5;"
                             onclick="clearAllDocuments()" title="Delete all documents in archive">
                             Clear All
@@ -341,8 +341,136 @@
         </div>
     </div>
 
+    <!-- Direct Document Operations & Global Handlers -->
+    <script>
+        window.getOrFetchAuthToken = async function() {
+            let token = localStorage.getItem('pragati_token') || window.authToken;
+            if (token) return token;
+            try {
+                const email = "evaluator@pragatibharati.org";
+                const password = "EvaluatorSecure2026!";
+                let res = await fetch('/api/v1/auth/login/json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (res.status === 401) {
+                    await fetch('/api/v1/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
+                    });
+                    res = await fetch('/api/v1/auth/login/json', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                }
+                if (res.ok) {
+                    const data = await res.json();
+                    token = data.access_token;
+                    localStorage.setItem('pragati_token', token);
+                    window.authToken = token;
+                    return token;
+                }
+            } catch(e) {
+                console.warn("Auth initialization error:", e);
+            }
+            return null;
+        };
+
+        window.clearAllDocuments = async function() {
+            const btn = document.getElementById('btn-clear-all');
+            if (!confirm("Are you sure you want to clear ALL documents from the archive?")) return;
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "Clearing...";
+            }
+            try {
+                const token = await window.getOrFetchAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch('/api/v1/documents', {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (res.ok) {
+                    window.activeDocumentId = null;
+                    const docNameEl = document.getElementById('status-doc-name');
+                    if (docNameEl) docNameEl.innerText = "None Selected";
+                    if (typeof window.setStatusBadge === 'function') window.setStatusBadge("IDLE");
+                    if (typeof window.updateProgressBar === 'function') window.updateProgressBar(0);
+                    const viewport = document.getElementById('questions-viewport');
+                    if (viewport) {
+                        viewport.innerHTML = `
+                            <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: var(--wb-border-dark);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Archive Cleared</h3>
+                                <p style="margin-top: 6px; font-size: 13px;">All documents have been removed. Upload a new examination paper to begin.</p>
+                            </div>
+                        `;
+                    }
+                    if (typeof window.loadDocumentsList === 'function') {
+                        await window.loadDocumentsList();
+                    } else {
+                        const listContainer = document.getElementById('documents-list-container');
+                        if (listContainer) listContainer.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--wb-text-muted); font-size: 12px;">No documents loaded.</div>';
+                    }
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Failed to clear archive: " + (err.detail || res.statusText || "Unknown error"));
+                }
+            } catch(e) {
+                alert("Clear archive error: " + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "Clear All";
+                }
+            }
+        };
+
+        window.deleteSingleDocument = async function(docId, filename) {
+            if (!confirm('Are you sure you want to delete "' + filename + '"?')) return;
+            try {
+                const token = await window.getOrFetchAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch('/api/v1/documents/' + docId, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (res.ok) {
+                    if (window.activeDocumentId === docId) {
+                        window.activeDocumentId = null;
+                        const docNameEl = document.getElementById('status-doc-name');
+                        if (docNameEl) docNameEl.innerText = "None Selected";
+                        if (typeof window.setStatusBadge === 'function') window.setStatusBadge("IDLE");
+                        if (typeof window.updateProgressBar === 'function') window.updateProgressBar(0);
+                        const viewport = document.getElementById('questions-viewport');
+                        if (viewport) {
+                            viewport.innerHTML = `
+                                <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: var(--wb-border-dark);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Document Intelligence Workbench</h3>
+                                    <p style="margin-top: 6px; font-size: 13px;">Select an uploaded document from the archive on the left to review extracted questions.</p>
+                                </div>
+                            `;
+                        }
+                    }
+                    if (typeof window.loadDocumentsList === 'function') {
+                        await window.loadDocumentsList();
+                    }
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Failed to delete document: " + (err.detail || res.statusText || "Unknown error"));
+                }
+            } catch(e) {
+                alert("Delete document error: " + e.message);
+            }
+        };
+    </script>
+
     <!-- Controller Script -->
-    <script src="/static/js/workbench.js?v=2.1.0"></script>
+    <script src="/static/js/workbench.js?v=3.1.0"></script>
 </body>
 
 </html>

@@ -3,7 +3,7 @@
 // Document Intelligence & Question Extraction Service
 // ==========================================================================
 
-let authToken = null;
+let authToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || window.authToken || null;
 let activeDocumentId = null;
 let pollingInterval = null;
 let activeFilter = 'all';
@@ -47,6 +47,8 @@ async function authenticateDefaultUser() {
         if (res.ok) {
             const data = await res.json();
             authToken = data.access_token;
+            if (typeof localStorage !== 'undefined') localStorage.setItem('pragati_token', authToken);
+            window.authToken = authToken;
             const sb = document.getElementById('sb-status');
             if (sb) sb.innerText = `${email}`;
         }
