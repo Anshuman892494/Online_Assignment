@@ -191,7 +191,7 @@ function setStatusBadge(text) {
         badge.style = '';
     } else {
         badge.className = '';
-        badge.style = 'background:#e2e8f0; color:#334155; border:1px solid #cbd5e1; border-radius:4px; font-size:11px; font-weight:600; padding:2px 8px;';
+        badge.style = 'background:#f5f5f4; color:#78716c; border:1px solid #e7e5e4; border-radius:4px; font-size:11px; font-weight:600; padding:2px 8px;';
     }
 }
 
@@ -322,7 +322,7 @@ function renderQuestions() {
                         <input type="radio" disabled ${isCorrect ? 'checked' : ''}>
                         <strong>[${opt.label}]</strong>
                         <span>${escapeHtml(opt.text)}</span>
-                        ${isCorrect ? '<em style="color:#008000; margin-left:auto;">[Key Match]</em>' : ''}
+                        ${isCorrect ? '<span style="color:#16a34a; font-weight:600; font-size:11px; margin-left:auto;">✓ Key Match</span>' : ''}
                     </div>
                 `;
             });
@@ -334,12 +334,12 @@ function renderQuestions() {
                 <div>
                     <span class="sys-q-num">Q${q.question_number}</span>
                     <span class="sys-q-pages">[Page ${pagesStr}]</span>
-                    <span style="font-size: 10px; font-weight: bold; margin-left: 6px;">[${q.question_type.toUpperCase()}]</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--wb-text-secondary); margin-left: 6px;">[${q.question_type.toUpperCase()}]</span>
                 </div>
                 <div>${badgeHtml}</div>
             </div>
             ${reasonsHtml}
-            <div class="sys-q-body sys-bevel-inset" style="margin-top: 6px;">
+            <div class="sys-q-body" style="margin-top: 8px;">
                 <p style="white-space: pre-wrap;">${escapeHtml(q.question_text)}</p>
                 ${optionsHtml}
             </div>
@@ -349,7 +349,7 @@ function renderQuestions() {
                     Identified Answer: <strong>${q.answer ? '[' + q.answer + ']' : 'NONE'}</strong>
                 </div>
                 <div style="display: flex; gap: 4px;">
-                    ${q.review_required ? `<button class="sys-button" onclick="approveQuestion('${q.id}')">&#10004; Approve</button>` : ''}
+                    ${q.review_required ? `<button class="sys-button primary" style="font-size: 11px; padding: 4px 10px;" onclick="approveQuestion('${q.id}')">✓ Approve Question</button>` : ''}
                 </div>
             </div>
         `;
@@ -469,9 +469,6 @@ async function submitAnswerKeyAssociation() {
     }
 }
 
-function showAboutModal() {
-    alert("Pragati Bharati — Round 2 Engineering Assignment\nDocument Intelligence & Question Extraction Workbench\nTechnology: FastAPI + PostgreSQL + Redis + PyMuPDF + Gemini Vision AI");
-}
 
 function escapeHtml(str) {
     if (!str) return '';

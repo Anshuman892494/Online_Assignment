@@ -19,8 +19,9 @@ async def test_retro_dashboard_serves_html_and_assets():
         # 2. Test Modern CSS file
         css_res = await client.get("/static/css/retro-system.css")
         assert css_res.status_code == 200
-        assert "--wb-canvas: #f8fafc" in css_res.text
-        assert "--wb-border: #e2e8f0" in css_res.text
+        assert "--wb-canvas: #fafaf9" in css_res.text
+        assert "--wb-primary: #ea580c" in css_res.text
+        assert "--wb-border: #e7e5e4" in css_res.text
 
         # 3. Test Retro JS Controller
         js_res = await client.get("/static/js/workbench.js")
