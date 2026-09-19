@@ -1,4 +1,5 @@
 import pytest
+import uuid
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal, init_db
 from app.models import User, Document, Question, DocumentRelationship, AnswerKey
@@ -8,10 +9,11 @@ async def test_database_initialization_and_crud():
     # Initialize schema
     await init_db()
 
+    test_email = f"pytest_{uuid.uuid4().hex[:8]}@pragatibharati.org"
     async with AsyncSessionLocal() as session:
         # Create test user
         user = User(
-            email="pytest_evaluator@pragatibharati.org",
+            email=test_email,
             hashed_password="hashed_evaluator_password_123",
             full_name="PyTest Evaluator",
             role="admin"
@@ -21,7 +23,7 @@ async def test_database_initialization_and_crud():
         await session.refresh(user)
 
         assert user.id is not None
-        assert user.email == "pytest_evaluator@pragatibharati.org"
+        assert user.email == test_email
 
         # Create test document
         doc = Document(
