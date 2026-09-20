@@ -9,67 +9,156 @@ let pollingInterval = null;
 let activeFilter = 'all';
 let allLoadedQuestions = [];
 let userDocuments = [];
+let isAuthMandatory = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     initDragAndDrop();
-    await authenticateDefaultUser();
-    await loadDocumentsList();
+    await checkAuthenticationState();
 });
 
-// --- Authentication ---
-async function authenticateDefaultUser() {
-    try {
-        const email = "evaluator@pragatibharati.org";
-        const password = "EvaluatorSecure2026!";
-
-        // 1. Try login first
-        let res = await fetch('/api/v1/auth/login/json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-
-        // 2. If user does not exist yet (401), register and then login
-        if (res.status === 401) {
-            await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
+// --- Authentication State Management & Gating ---
+async function checkAuthenticationState() {
+    authToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || window.authToken || null;
+    if (authToken) {
+        try {
+            const res = await fetch('/api/v1/auth/me', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
             });
-
-            res = await fetch('/api/v1/auth/login/json', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+            if (res.ok) {
+                const user = await res.json();
+                setAuthenticatedUI(user.email);
+                await loadDocumentsList();
+                return true;
+            }
+        } catch (e) {
+            console.warn("Auth token verification error:", e);
         }
-
-        if (res.ok) {
-            const data = await res.json();
-            authToken = data.access_token;
-            if (typeof localStorage !== 'undefined') localStorage.setItem('pragati_token', authToken);
-            window.authToken = authToken;
-            const sb = document.getElementById('sb-status');
-            if (sb) sb.innerText = `${email}`;
-        }
-    } catch (e) {
-        console.warn("Auth initialization note:", e);
     }
+    // No token or token invalid: lock features and open mandatory login modal
+    setUnauthenticatedUI();
+    openAuthModal(true);
+    return false;
 }
 
-// --- Interactive Auth Modal Controller (Option B) ---
-function openAuthModal() {
+function setAuthenticatedUI(email) {
+    isAuthMandatory = false;
+    const sb = document.getElementById('sb-status');
+    if (sb) sb.innerText = email || "Evaluator";
+    const dot = document.getElementById('sb-dot');
+    if (dot) {
+        dot.className = 'sys-dot-online';
+    }
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+
+    // Unlock workspace
+    const workspace = document.querySelector('.sys-workspace');
+    if (workspace) workspace.classList.remove('sys-locked');
+
+    // Enable close/cancel in modal for normal account management
+    const closeBtn = document.getElementById('auth-modal-close-btn');
+    if (closeBtn) closeBtn.style.display = 'block';
+    const loginCancel = document.getElementById('auth-login-cancel-btn');
+    if (loginCancel) loginCancel.style.display = 'inline-flex';
+    const regCancel = document.getElementById('auth-reg-cancel-btn');
+    if (regCancel) regCancel.style.display = 'inline-flex';
+    const gateNotice = document.getElementById('auth-gate-notice');
+    if (gateNotice) gateNotice.style.display = 'none';
+    const modalTitle = document.getElementById('auth-modal-title');
+    if (modalTitle) modalTitle.innerText = "User Authentication & Multi-Tenancy";
+}
+
+function setUnauthenticatedUI() {
+    isAuthMandatory = true;
+    authToken = null;
+    window.authToken = null;
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('pragati_token');
+
+    const sb = document.getElementById('sb-status');
+    if (sb) sb.innerText = "Not Signed In";
+    const dot = document.getElementById('sb-dot');
+    if (dot) {
+        dot.className = 'sys-dot-offline';
+    }
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+
+    // Lock workspace
+    const workspace = document.querySelector('.sys-workspace');
+    if (workspace) workspace.classList.add('sys-locked');
+
+    // Empty list container
+    const container = document.getElementById('documents-list-container');
+    if (container) container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--wb-text-muted); font-size: 12px;">Sign in to view archive</div>';
+
+    // Reset status and viewport
+    activeDocumentId = null;
+    const docName = document.getElementById('status-doc-name');
+    if (docName) docName.innerText = "None Selected";
+    setStatusBadge("LOCKED");
+    updateProgressBar(0);
+    const viewport = document.getElementById('questions-viewport');
+    if (viewport) {
+        viewport.innerHTML = `
+            <div style="padding: 80px 20px; text-align: center; color: var(--wb-text-muted);">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; color: var(--wb-primary);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h3 style="color: var(--wb-text-primary); font-size: 15px; font-weight: 600;">Authentication Required</h3>
+                <p style="margin-top: 6px; font-size: 13px;">Please sign in or register above to access the document intelligence workspace.</p>
+            </div>
+        `;
+    }
+
+    // Modal elements for mandatory auth
+    const closeBtn = document.getElementById('auth-modal-close-btn');
+    if (closeBtn) closeBtn.style.display = 'none';
+    const loginCancel = document.getElementById('auth-login-cancel-btn');
+    if (loginCancel) loginCancel.style.display = 'none';
+    const regCancel = document.getElementById('auth-reg-cancel-btn');
+    if (regCancel) regCancel.style.display = 'none';
+    const gateNotice = document.getElementById('auth-gate-notice');
+    if (gateNotice) gateNotice.style.display = 'flex';
+    const modalTitle = document.getElementById('auth-modal-title');
+    if (modalTitle) modalTitle.innerText = "Sign In Required";
+}
+
+function handleUnauthorizedResponse() {
+    setUnauthenticatedUI();
+    openAuthModal(true);
+    showAuthAlert("Your session has expired or authentication is required. Please sign in.");
+}
+
+function handleLogout() {
+    setUnauthenticatedUI();
+    openAuthModal(true);
+    showAuthAlert("You have signed out successfully.", false);
+}
+
+// --- Interactive Auth Modal Controller ---
+function openAuthModal(mandatory = false) {
+    if (mandatory || !authToken) {
+        setUnauthenticatedUI();
+    }
     const modal = document.getElementById('auth-modal');
     if (modal) {
         hideAuthAlert();
         modal.classList.add('open');
+        if (isAuthMandatory) {
+            modal.classList.add('mandatory');
+        } else {
+            modal.classList.remove('mandatory');
+        }
     }
 }
 
 function closeAuthModal() {
+    if (isAuthMandatory && !authToken) {
+        showAuthAlert("You must sign in or create an account to access the workbench features.");
+        return;
+    }
     const modal = document.getElementById('auth-modal');
     if (modal) {
         modal.classList.remove('open');
+        modal.classList.remove('mandatory');
     }
 }
 
@@ -125,16 +214,32 @@ async function handleManualLogin() {
     }
 
     try {
-        const res = await fetch('/api/v1/auth/login/json', {
+        let res = await fetch('/api/v1/auth/login/json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
+        // If evaluator demo user is not yet created in a fresh DB, register it seamlessly
+        if (res.status === 401 && email === "evaluator@pragatibharati.org") {
+            await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
+            });
+            res = await fetch('/api/v1/auth/login/json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+        }
+
         if (res.ok) {
             const data = await res.json();
             authToken = data.access_token;
-            document.getElementById('sb-status').innerText = `${email}`;
+            if (typeof localStorage !== 'undefined') localStorage.setItem('pragati_token', authToken);
+            window.authToken = authToken;
+            setAuthenticatedUI(email);
             closeAuthModal();
             // Reset active selection and reload user's documents
             activeDocumentId = null;
@@ -149,8 +254,8 @@ async function handleManualLogin() {
             `;
             await loadDocumentsList();
         } else {
-            const err = await res.json();
-            showAuthAlert(err.detail || "Authentication failed.");
+            const err = await res.json().catch(() => ({}));
+            showAuthAlert(err.detail || "Authentication failed. Please check credentials.");
         }
     } catch (e) {
         showAuthAlert("Network error: " + e.message);
@@ -181,7 +286,7 @@ async function handleManualRegister() {
         });
 
         if (!regRes.ok) {
-            const err = await regRes.json();
+            const err = await regRes.json().catch(() => ({}));
             showAuthAlert(err.detail || "Registration failed.");
             return;
         }
@@ -196,7 +301,9 @@ async function handleManualRegister() {
         if (loginRes.ok) {
             const data = await loginRes.json();
             authToken = data.access_token;
-            document.getElementById('sb-status').innerText = `${email}`;
+            if (typeof localStorage !== 'undefined') localStorage.setItem('pragati_token', authToken);
+            window.authToken = authToken;
+            setAuthenticatedUI(email);
             closeAuthModal();
             activeDocumentId = null;
             document.getElementById('status-doc-name').innerText = "None Selected";
@@ -232,6 +339,11 @@ function initDragAndDrop() {
     });
 
     dropZone.addEventListener('drop', (e) => {
+        if (!authToken) {
+            openAuthModal(true);
+            showAuthAlert("Please sign in first to upload documents.");
+            return;
+        }
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             fileInput.files = e.dataTransfer.files;
             handleFileSelected(fileInput);
@@ -270,6 +382,12 @@ function handleFileSelected(input) {
 
 // --- File Upload (Single & Batch Multiple) ---
 async function uploadSelectedFile() {
+    if (!authToken) {
+        openAuthModal(true);
+        showAuthAlert("Please sign in or create an account to upload documents.");
+        return;
+    }
+
     const fileInput = document.getElementById('file-upload-input');
     if (!fileInput.files || fileInput.files.length === 0) {
         alert("Please select one or more files first.");
@@ -314,6 +432,15 @@ async function uploadSelectedFile() {
                 headers: token ? { 'Authorization': `Bearer ${token}` } : {},
                 body: formData
             });
+
+            if (res.status === 401) {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerText = "Submit to Ingestion Queue";
+                }
+                handleUnauthorizedResponse();
+                return;
+            }
 
             if (res.ok) {
                 const data = await res.json();
@@ -360,6 +487,12 @@ function startStatusPolling(docId) {
             const res = await fetch(`/api/v1/documents/${docId}/status`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
+
+            if (res.status === 401) {
+                clearInterval(pollingInterval);
+                handleUnauthorizedResponse();
+                return;
+            }
 
             if (res.ok) {
                 const statusData = await res.json();
@@ -416,10 +549,15 @@ function setStatusBadge(text) {
 
 // --- Document Archive List ---
 async function loadDocumentsList() {
+    if (!authToken) return;
     try {
         const res = await fetch('/api/v1/documents', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
         if (res.ok) {
             userDocuments = await res.json();
             const container = document.getElementById('documents-list-container');
@@ -451,9 +589,7 @@ async function loadDocumentsList() {
 
 async function deleteSingleDocument(docId, filename) {
     if (!authToken) {
-        await authenticateDefaultUser();
-    }
-    if (!authToken) {
+        openAuthModal(true);
         alert("Authentication required. Please log in first.");
         return;
     }
@@ -464,6 +600,11 @@ async function deleteSingleDocument(docId, filename) {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
 
         if (res.ok) {
             if (activeDocumentId === docId) {
@@ -481,7 +622,7 @@ async function deleteSingleDocument(docId, filename) {
             }
             await loadDocumentsList();
         } else {
-            const err = await res.json();
+            const err = await res.json().catch(() => ({}));
             alert(`Failed to delete document: ${err.detail || 'Unknown error'}`);
         }
     } catch (e) {
@@ -492,9 +633,7 @@ window.deleteSingleDocument = deleteSingleDocument;
 
 async function clearAllDocuments() {
     if (!authToken) {
-        await authenticateDefaultUser();
-    }
-    if (!authToken) {
+        openAuthModal(true);
         alert("Authentication required. Please log in first.");
         return;
     }
@@ -505,6 +644,11 @@ async function clearAllDocuments() {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
 
         if (res.ok) {
             activeDocumentId = null;
@@ -520,7 +664,7 @@ async function clearAllDocuments() {
             `;
             await loadDocumentsList();
         } else {
-            const err = await res.json();
+            const err = await res.json().catch(() => ({}));
             alert(`Failed to clear archive: ${err.detail || 'Unknown error'}`);
         }
     } catch (e) {
@@ -530,6 +674,10 @@ async function clearAllDocuments() {
 window.clearAllDocuments = clearAllDocuments;
 
 function selectActiveDocument(doc) {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
     activeDocumentId = doc.id;
     document.getElementById('status-doc-name').innerText = doc.filename;
     setStatusBadge(doc.status, doc.status === 'COMPLETED' ? '#008000' : '#000080');
@@ -540,12 +688,17 @@ function selectActiveDocument(doc) {
 
 // --- Question Desk & Rendering ---
 async function loadQuestionsForActiveDoc() {
-    if (!activeDocumentId) return;
+    if (!activeDocumentId || !authToken) return;
 
     try {
         const res = await fetch(`/api/v1/documents/${activeDocumentId}/questions?limit=200`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
 
         if (res.ok) {
             const data = await res.json();
@@ -661,6 +814,10 @@ function renderQuestions() {
 }
 
 async function approveQuestion(qId) {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
     if (!activeDocumentId) return;
     try {
         const res = await fetch(`/api/v1/documents/${activeDocumentId}/questions/${qId}`, {
@@ -671,6 +828,10 @@ async function approveQuestion(qId) {
             },
             body: JSON.stringify({ review_required: false })
         });
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
         if (res.ok) {
             await loadQuestionsForActiveDoc();
         }
@@ -681,6 +842,10 @@ async function approveQuestion(qId) {
 
 // --- Standard JSON Export ---
 async function exportStructuredJson() {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
     if (!activeDocumentId) {
         alert("Please select a processed document to export.");
         return;
@@ -690,6 +855,10 @@ async function exportStructuredJson() {
         const res = await fetch(`/api/v1/documents/${activeDocumentId}/export`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
         if (res.ok) {
             const data = await res.json();
             const textarea = document.getElementById('export-json-content');
@@ -751,6 +920,11 @@ function downloadJsonFile() {
 
 // --- Answer Key Intelligence & Association Modal ---
 async function openAnswerKeyModal() {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
+
     if (!activeDocumentId) {
         if (userDocuments && userDocuments.length > 0) {
             selectActiveDocument(userDocuments[0]);
@@ -768,6 +942,16 @@ async function openAnswerKeyModal() {
     const activeDoc = userDocuments.find(d => d.id === activeDocumentId);
     if (badge) badge.innerText = activeDoc ? activeDoc.filename : 'Active Document';
 
+    // Reset modal state before fetching
+    const gridContainer = document.getElementById('ak-grid-container');
+    const countBadge = document.getElementById('ak-detected-count');
+    const confBadge = document.getElementById('ak-confidence-badge');
+    const copyBtn = document.getElementById('btn-copy-ak');
+
+    if (countBadge) countBadge.innerText = '0';
+    if (confBadge) confBadge.innerHTML = `Detection Confidence: <strong style="color: var(--wb-text-muted);">Checking...</strong>`;
+    if (copyBtn) copyBtn.disabled = true;
+
     // 1. Fetch detected answer key for active doc
     try {
         const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || authToken;
@@ -775,9 +959,10 @@ async function openAnswerKeyModal() {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
 
-        const gridContainer = document.getElementById('ak-grid-container');
-        const countBadge = document.getElementById('ak-detected-count');
-        const confBadge = document.getElementById('ak-confidence-badge');
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
 
         if (res.ok) {
             const data = await res.json();
@@ -789,12 +974,26 @@ async function openAnswerKeyModal() {
             });
 
             if (countBadge) countBadge.innerText = keyEntries.length;
-            if (confBadge) confBadge.innerHTML = `Detection Confidence: <strong style="color: #16a34a;">${Math.round((data.detection_confidence || 0.95) * 100)}%</strong>`;
 
-            if (gridContainer) {
-                if (keyEntries.length === 0) {
+            if (keyEntries.length === 0) {
+                // No keys detected: show 0% and disable copy
+                if (confBadge) {
+                    confBadge.innerHTML = `Detection Confidence: <strong style="color: var(--wb-text-muted);">0% (No Keys Detected)</strong>`;
+                }
+                if (copyBtn) copyBtn.disabled = true;
+                if (gridContainer) {
                     gridContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--wb-text-muted); font-size: 13px;">No embedded answer key detected in this document. You can link a separate answer key document from the "Link Separate Document" tab.</div>';
-                } else {
+                }
+            } else {
+                const rawConf = typeof data.detection_confidence === 'number' ? data.detection_confidence : 0.0;
+                const confPercent = Math.round(rawConf * 100);
+                const confColor = confPercent >= 80 ? '#16a34a' : (confPercent >= 50 ? '#d97706' : '#dc2626');
+
+                if (confBadge) {
+                    confBadge.innerHTML = `Detection Confidence: <strong style="color: ${confColor};">${confPercent}%</strong>`;
+                }
+                if (copyBtn) copyBtn.disabled = false;
+                if (gridContainer) {
                     gridContainer.innerHTML = keyEntries.map(([qNum, ans]) => `
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #fff; border: 1px solid var(--wb-border); border-radius: 4px; font-family: var(--font-mono);">
                             <span style="font-size: 12px; color: var(--wb-text-secondary); font-weight: 500;">Q${qNum}</span>
@@ -803,9 +1002,12 @@ async function openAnswerKeyModal() {
                     `).join('');
                 }
             }
+        } else {
+            if (confBadge) confBadge.innerHTML = `Detection Confidence: <strong style="color: var(--wb-text-muted);">0%</strong>`;
         }
     } catch (e) {
         console.warn("Answer key fetch error:", e);
+        if (confBadge) confBadge.innerHTML = `Detection Confidence: <strong style="color: var(--wb-text-muted);">0%</strong>`;
     }
 
     // 2. Populate candidate documents for linking
@@ -896,6 +1098,10 @@ function closeAssociateModal() {
 }
 
 async function submitAnswerKeyAssociation() {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
     const keyDocSelect = document.getElementById('associate-key-doc-select');
     if (!keyDocSelect || !keyDocSelect.value) {
         alert("Please select an answer key document from the list.");
@@ -912,6 +1118,10 @@ async function submitAnswerKeyAssociation() {
             },
             body: JSON.stringify({ answer_key_document_id: keyDocId })
         });
+        if (res.status === 401) {
+            handleUnauthorizedResponse();
+            return;
+        }
         if (res.ok) {
             const result = await res.json();
             alert(result.message);
@@ -928,6 +1138,10 @@ async function submitAnswerKeyAssociation() {
 
 // --- Smooth Refresh All Handler ---
 async function handleRefreshAll() {
+    if (!authToken) {
+        openAuthModal(true);
+        return;
+    }
     const btnText = document.getElementById('refresh-btn-text');
     const icon = document.getElementById('refresh-icon');
 
@@ -956,7 +1170,6 @@ async function handleRefreshAll() {
     }
 }
 
-
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -970,6 +1183,8 @@ window.closeAuthModal = closeAuthModal;
 window.switchAuthTab = switchAuthTab;
 window.handleManualLogin = handleManualLogin;
 window.handleManualRegister = handleManualRegister;
+window.handleLogout = handleLogout;
+window.checkAuthenticationState = checkAuthenticationState;
 window.loadDemoEvaluatorCredentials = loadDemoEvaluatorCredentials;
 window.openAnswerKeyModal = openAnswerKeyModal;
 window.openAssociateModal = openAnswerKeyModal;

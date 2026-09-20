@@ -66,18 +66,26 @@
                     API Docs
                 </a>
 
-                <!-- Authenticated User Status -->
-                <div class="sys-user-chip" onclick="openAuthModal()" style="cursor: pointer;"
-                    title="Click to Switch User or Sign In">
-                    <span class="sys-dot-online"></span>
-                    <span id="sb-status">Connecting...</span>
+                <!-- Authenticated User Status & Logout -->
+                <div class="sys-user-chip" id="user-chip-container" onclick="openAuthModal()" style="cursor: pointer;"
+                    title="Click to View Account or Sign In">
+                    <span id="sb-dot" class="sys-dot-offline"></span>
+                    <span id="sb-status">Not Signed In</span>
                 </div>
-                <button class="sys-button" onclick="openAuthModal()" title="Switch Account / Sign In / Register">
+                <button class="sys-button" id="btn-account" onclick="openAuthModal()" title="Account / Switch User">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                     Account
+                </button>
+                <button class="sys-button" id="btn-logout" onclick="handleLogout()" title="Sign Out of Session" style="display: none; color: #dc2626; border-color: #fecaca; background: #fef2f2;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Sign Out
                 </button>
             </div>
         </header>
@@ -284,9 +292,9 @@
                 <div id="ak-panel-detected">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <span id="ak-confidence-badge" style="font-size: 12px; color: var(--wb-text-secondary);">
-                            Detection Confidence: <strong style="color: #16a34a;">95%</strong>
+                            Detection Confidence: <strong style="color: var(--wb-text-muted);">0%</strong>
                         </span>
-                        <button class="sys-button" onclick="copyAnswerKeyText()" style="padding: 3px 10px; font-size: 11px;">
+                        <button class="sys-button" id="btn-copy-ak" onclick="copyAnswerKeyText()" style="padding: 3px 10px; font-size: 11px;" disabled>
                             Copy All Keys
                         </button>
                     </div>
@@ -328,9 +336,9 @@
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span>User Authentication & Multi-Tenancy</span>
+                    <span id="auth-modal-title">Sign In Required</span>
                 </div>
-                <button class="sys-button" style="padding: 2px 8px; font-size: 11px;"
+                <button class="sys-button" id="auth-modal-close-btn" style="padding: 2px 8px; font-size: 11px; display: none;"
                     onclick="closeAuthModal()">✕</button>
             </div>
 
@@ -345,6 +353,18 @@
             </div>
 
             <div style="padding: 20px;">
+                <!-- Mandatory Auth Gate Notice (shown when user is unauthenticated) -->
+                <div id="auth-gate-notice" class="auth-gate-notice" style="display: flex;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <div>
+                        <strong style="color: #c2410c;">Authentication Required</strong><br>
+                        Please sign in or create an account to unlock document ingestion, question extraction, and workbench features.
+                    </div>
+                </div>
+
                 <!-- Error / Notification alert -->
                 <div id="auth-alert"
                     style="display: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 14px;">
@@ -368,7 +388,7 @@
                     <div style="display: flex; gap: 8px; margin-top: 18px;">
                         <button class="sys-button primary" style="flex: 1; justify-content: center;"
                             onclick="handleManualLogin()">Sign In</button>
-                        <button class="sys-button" onclick="closeAuthModal()">Cancel</button>
+                        <button class="sys-button" id="auth-login-cancel-btn" style="display: none;" onclick="closeAuthModal()">Cancel</button>
                     </div>
                     <div
                         style="margin-top: 14px; text-align: center; border-top: 1px solid var(--wb-border); padding-top: 12px;">
@@ -403,7 +423,7 @@
                     <div style="display: flex; gap: 8px; margin-top: 18px;">
                         <button class="sys-button primary" style="flex: 1; justify-content: center;"
                             onclick="handleManualRegister()">Create Account & Sign In</button>
-                        <button class="sys-button" onclick="closeAuthModal()">Cancel</button>
+                        <button class="sys-button" id="auth-reg-cancel-btn" style="display: none;" onclick="closeAuthModal()">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -413,37 +433,10 @@
     <!-- Direct Document Operations & Global Handlers -->
     <script>
         window.getOrFetchAuthToken = async function() {
-            let token = localStorage.getItem('pragati_token') || window.authToken;
+            let token = (typeof localStorage !== 'undefined' ? localStorage.getItem('pragati_token') : null) || window.authToken || null;
             if (token) return token;
-            try {
-                const email = "evaluator@pragatibharati.org";
-                const password = "EvaluatorSecure2026!";
-                let res = await fetch('/api/v1/auth/login/json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                if (res.status === 401) {
-                    await fetch('/api/v1/auth/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password, full_name: "Lead Evaluator" })
-                    });
-                    res = await fetch('/api/v1/auth/login/json', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                }
-                if (res.ok) {
-                    const data = await res.json();
-                    token = data.access_token;
-                    localStorage.setItem('pragati_token', token);
-                    window.authToken = token;
-                    return token;
-                }
-            } catch(e) {
-                console.warn("Auth initialization error:", e);
+            if (typeof window.openAuthModal === 'function') {
+                window.openAuthModal(true);
             }
             return null;
         };
